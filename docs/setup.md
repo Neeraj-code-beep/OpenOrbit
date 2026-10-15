@@ -33,6 +33,13 @@ cp .env.example .env
 ```
 
 Open `.env` and set your preferred keys:
+- For Database & Authentication (MongoDB):
+  ```ini
+  MONGODB_URI=mongodb://127.0.0.1:27017/openorbit
+  JWT_SECRET=replace_with_a_long_random_secret
+  JWT_EXPIRES_IN=1d
+  CLIENT_ORIGIN=http://localhost:5173
+  ```
 - For Google Gemini:
   ```ini
   AI_PROVIDER=gemini

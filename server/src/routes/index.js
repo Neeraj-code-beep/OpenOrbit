@@ -3,9 +3,14 @@ import healthRoutes from './health.routes.js';
 import githubRoutes from './github.routes.js';
 import aiRoutes from './ai.routes.js';
 import contributionRoutes from './contribution.routes.js';
+import authRoutes from './auth.routes.js';
 import { mcpClient } from '../services/mcp/mcp.client.js';
 
 const router = Router();
+
+// Authentication Endpoints (/api/v1/auth/* and /api/auth/*)
+router.use('/v1/auth', authRoutes);
+router.use('/auth', authRoutes);
 
 router.use('/health', healthRoutes);
 router.use('/github', githubRoutes);

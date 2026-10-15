@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { requestIdMiddleware } from './middleware/request-id.middleware.js';
 import { notFoundMiddleware } from './middleware/not-found.middleware.js';
@@ -10,7 +11,12 @@ export function createApp() {
   const app = express();
 
   // Security & CORS
-  const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+  const configuredOrigins = [
+    ...env.CORS_ORIGIN.split(','),
+    env.CLIENT_ORIGIN,
+  ].map((o) => o?.trim()).filter(Boolean);
+  const allowedOrigins = Array.from(new Set(configuredOrigins));
+
   app.use(
     cors({
       origin: (origin, callback) => {
@@ -25,6 +31,9 @@ export function createApp() {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     })
   );
+
+  // Cookie parsing for HTTP-only JWT cookies
+  app.use(cookieParser());
 
   // Request parsing with body size limit (1MB max to mitigate memory exhaustion)
   app.use(express.json({ limit: '1mb' }));

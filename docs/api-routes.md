@@ -141,3 +141,98 @@ Validates an edited plan and returns verification metrics.
 
 ### `POST /api/contributions/pr-description`
 Generates a complete GitHub pull request markdown template from plan data.
+
+---
+
+## 5. Authentication Endpoints
+
+All authentication endpoints are mounted under `/api/v1/auth` (and alias `/api/auth`). Tokens are transmitted via secure, HTTP-only cookies (`openorbit_token`).
+
+### `POST /api/v1/auth/register`
+Creates a persistent MongoDB user account, hashes password using bcrypt, sets an HTTP-only JWT cookie, and returns the safe user profile.
+
+**Request Body:**
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": "661000000000000000000001",
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "createdAt": "2026-10-15T12:00:00.000Z",
+      "updatedAt": "2026-10-15T12:00:00.000Z"
+    }
+  }
+}
+```
+*Sets `Set-Cookie: openorbit_token=<jwt>; Path=/; HttpOnly; SameSite=Lax`*
+
+### `POST /api/v1/auth/login`
+Verifies credentials using bcrypt, sets the HTTP-only JWT cookie, and returns safe user profile.
+
+**Request Body:**
+```json
+{
+  "email": "ada@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "661000000000000000000001",
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "createdAt": "2026-10-15T12:00:00.000Z",
+      "updatedAt": "2026-10-15T12:00:00.000Z"
+    }
+  }
+}
+```
+
+### `GET /api/v1/auth/me` *(Protected)*
+Requires a valid session cookie or Bearer token. Returns the authenticated user's profile.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "661000000000000000000001",
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "createdAt": "2026-10-15T12:00:00.000Z",
+      "updatedAt": "2026-10-15T12:00:00.000Z"
+    }
+  }
+}
+```
+
+### `POST /api/v1/auth/logout`
+Clears the `openorbit_token` authentication cookie with matching path, domain, and security flags.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+

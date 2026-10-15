@@ -2,6 +2,7 @@ import { env, getEnvStatus } from '../config/env.js';
 import { githubService } from '../services/github/github.service.js';
 import { aiRouter } from '../services/ai/ai.router.js';
 import { mcpClient } from '../services/mcp/mcp.client.js';
+import { getDBStatus } from '../config/db.js';
 
 /**
  * Health check controller reporting truthful status of all system dependencies
@@ -53,6 +54,7 @@ export async function getHealth(req, res) {
         ollama: aiStatus.providers.ollama,
       },
       mcp: mcpStatus,
+      database: getDBStatus(),
     },
   });
 }
