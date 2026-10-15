@@ -1,12 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import { api } from '../../lib/apiClient.js';
-import { Button } from '../../components/common/Button.jsx';
-import { LoadingState } from '../../components/common/LoadingState.jsx';
-import { ErrorState } from '../../components/common/ErrorState.jsx';
-import { EmptyState } from '../../components/common/EmptyState.jsx';
-import { ContributionPlan } from '../../components/contribution/ContributionPlan.jsx';
+import { useState, useEffect, useCallback } from "react";
+import { api } from "../../lib/apiClient.js";
+import { Button } from "../../components/common/Button.jsx";
+import { Icon } from "../../components/common/Icon.jsx";
+import { LoadingState } from "../../components/common/LoadingState.jsx";
+import { ErrorState } from "../../components/common/ErrorState.jsx";
+import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { ContributionPlan } from "../../components/contribution/ContributionPlan.jsx";
 
-export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigateToSettings }) {
+export function ContributionPage({
+  selectedIssue,
+  onNavigateToIssues,
+  onNavigateToSettings,
+}) {
   const [plan, setPlan] = useState(null);
   const [prDescription, setPrDescription] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +46,7 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
         });
         setPrDescription(prRes.data);
       } catch (prErr) {
-        console.warn('Could not generate PR template:', prErr);
+        console.warn("Could not generate PR template:", prErr);
       }
     } catch (err) {
       setError(err);
@@ -61,42 +66,53 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
   if (!selectedIssue) {
     return (
       <EmptyState
-        icon="🛠️"
-        title="No Issue Selected for Contribution"
+        icon="contribution"
+        title="No issue selected for contribution"
         message="Select an issue from the 'Discover Issues' catalog or enter a repository to generate an AI-assisted contribution plan."
-        actionText="Browse Issues →"
+        actionText="Browse issues →"
         onAction={onNavigateToIssues}
       />
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Selected Issue Context Box */}
-      <div className="card" style={{ borderColor: 'var(--border-medium)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span className="badge badge-primary">Active GitHub Issue</span>
+    <div className="page-stack">
+      {/* Selected issue context */}
+      <section className="card" aria-label="Selected issue">
+        <div
+          className="card-header"
+          style={{
+            alignItems: "flex-start",
+            marginBottom: selectedIssue.body ? 14 : 0,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div className="row-wrap" style={{ marginBottom: 8 }}>
+              <span className="badge badge-primary">Active GitHub issue</span>
               <span className="badge badge-label">#{selectedIssue.number}</span>
-              <span className="badge badge-label">@{selectedIssue.repository?.fullName}</span>
+              {selectedIssue.repository?.fullName && (
+                <span className="badge badge-label badge-wrap">
+                  {selectedIssue.repository.fullName}
+                </span>
+              )}
             </div>
-            <h2 style={{ fontSize: 19, margin: 0 }}>{selectedIssue.title}</h2>
+            <h2 style={{ fontSize: 18, margin: 0, overflowWrap: "anywhere" }}>
+              {selectedIssue.title}
+            </h2>
           </div>
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="row-wrap">
             <a
               href={selectedIssue.htmlUrl}
               target="_blank"
               rel="noreferrer"
               className="btn btn-secondary"
-              style={{ textDecoration: 'none' }}
             >
-              Open on GitHub ↗
+              Open on GitHub <Icon name="external" size={14} />
             </a>
             {!plan && !isLoading && (
               <Button variant="primary" onClick={generatePlan}>
-                Generate Plan Now 🚀
+                <Icon name="sparkle" size={16} /> Generate plan now
               </Button>
             )}
           </div>
@@ -104,21 +120,18 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
 
         {selectedIssue.body && (
           <div
+            className="code-block"
             style={{
-              marginTop: 14,
-              padding: '12px 14px',
-              background: 'var(--bg-elevated)',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 13,
-              color: 'var(--text-secondary)',
               maxHeight: 120,
-              overflowY: 'auto',
+              overflowY: "auto",
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
             }}
           >
             {selectedIssue.body}
           </div>
         )}
-      </div>
+      </section>
 
       {isLoading && (
         <LoadingState
@@ -128,22 +141,39 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
       )}
 
       {error && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <ErrorState
-            title="Failed to Generate Contribution Plan"
+            title="Failed to generate contribution plan"
             message={error.message}
             code={error.code}
             onRetry={generatePlan}
           />
-          {error.code === 'AI_PROVIDER_UNCONFIGURED' && (
-            <div className="card" style={{ background: 'var(--bg-secondary)', borderLeft: '4px solid var(--accent-cyan)' }}>
-              <h4 style={{ margin: '0 0 6px 0' }}>💡 Setting up your AI Provider</h4>
-              <p style={{ fontSize: 13, margin: '0 0 12px 0' }}>
-                OpenOrbit supports Google Gemini (cloud) and Ollama (local model). You can configure your API key or local model in Settings.
-              </p>
-              <Button size="sm" variant="primary" onClick={onNavigateToSettings}>
-                Open Settings & AI Configuration →
-              </Button>
+          {error.code === "AI_PROVIDER_UNCONFIGURED" && (
+            <div className="callout callout-info" role="note">
+              <Icon name="info" size={18} />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  alignItems: "flex-start",
+                }}
+              >
+                <strong style={{ color: "var(--text-primary)" }}>
+                  Set up your AI provider
+                </strong>
+                <span style={{ color: "var(--text-secondary)" }}>
+                  OpenOrbit supports Google Gemini (cloud) and Ollama (local
+                  model). You can review the provider configuration in Settings.
+                </span>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={onNavigateToSettings}
+                >
+                  Open Settings & AI configuration →
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -152,8 +182,20 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
       {plan && !isLoading && (
         <>
           {aiMeta && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
-              <span>Generated via provider: <strong style={{ color: 'var(--text-primary)' }}>{aiMeta.provider?.toUpperCase()}</strong></span>
+            <div
+              className="row-wrap"
+              style={{
+                justifyContent: "space-between",
+                fontSize: 12,
+                color: "var(--text-muted)",
+              }}
+            >
+              <span>
+                Generated via provider:{" "}
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {aiMeta.provider?.toUpperCase()}
+                </strong>
+              </span>
               <span>Inference duration: {aiMeta.durationMs}ms</span>
             </div>
           )}

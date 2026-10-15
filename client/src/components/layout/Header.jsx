@@ -1,42 +1,42 @@
-export function Header({ title, subtitle, selectedIssue, onClearSelectedIssue }) {
+import { Icon } from "../common/Icon.jsx";
+
+export function Header({
+  title,
+  subtitle,
+  section,
+  selectedIssue,
+  onClearSelectedIssue,
+}) {
+  const issueLabel = `#${selectedIssue?.number} in ${selectedIssue?.repository?.fullName || "repo"}`;
+
   return (
-    <header
-      style={{
-        padding: '18px 32px',
-        borderBottom: '1px solid var(--border-subtle)',
-        background: 'rgba(10, 14, 23, 0.7)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}
-    >
-      <div>
-        <h1 style={{ fontSize: '1.4rem', margin: 0 }}>{title}</h1>
-        {subtitle && <p style={{ fontSize: 13, margin: '2px 0 0 0', color: 'var(--text-muted)' }}>{subtitle}</p>}
+    <header className="app-header">
+      <div className="app-header-text">
+        {section && (
+          <nav className="breadcrumb" aria-label="Breadcrumb">
+            <span>OpenOrbit</span>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{section}</span>
+          </nav>
+        )}
+        <h1 className="app-header-title">{title}</h1>
+        {subtitle && <p className="app-header-subtitle">{subtitle}</p>}
       </div>
 
       {selectedIssue && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="badge badge-primary" style={{ padding: '6px 12px', fontSize: 13 }}>
-            <span>Active Issue: #{selectedIssue.number} in {selectedIssue.repository?.fullName || 'repo'}</span>
-          </div>
+        <div className="app-header-issue">
+          <span className="issue-chip" title={`Active issue ${issueLabel}`}>
+            <span className="issue-chip-label">Active issue</span>
+            <span className="issue-chip-value">{issueLabel}</span>
+          </span>
           <button
+            type="button"
+            className="icon-btn"
             onClick={onClearSelectedIssue}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              fontSize: 16,
-              padding: 4,
-            }}
+            aria-label="Deselect active issue"
             title="Deselect issue"
           >
-            ✕
+            <Icon name="close" size={16} />
           </button>
         </div>
       )}
