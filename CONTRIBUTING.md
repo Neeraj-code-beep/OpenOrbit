@@ -1,9 +1,9 @@
-# Contributing to PRPath
+# Contributing to OpenOrbit
 
-Thank you for your interest in contributing to **PRPath**! We welcome bug fixes, documentation improvements, and architectural enhancements.
+Thank you for your interest in contributing to **OpenOrbit**! We welcome bug fixes, documentation improvements, and architectural enhancements.
 
 ## Code of Conduct & Philosophy
-PRPath follows a "Human-in-the-Loop" architecture:
+OpenOrbit follows a "Human-in-the-Loop" architecture:
 1. **Deterministic facts first:** All GitHub information is fetched directly from real APIs.
 2. **Safe prompts:** All untrusted repository content is bounded in XML delimiters to protect against prompt injection.
 3. **Contributor authority:** AI generates proposals, strategies, and draft PR descriptions; developers review, edit, test, and commit code themselves.

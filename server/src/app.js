@@ -47,7 +47,7 @@ export function createApp() {
   // Root welcome
   app.get('/', (req, res) => {
     res.json({
-      name: 'PRPath API',
+      name: 'OpenOrbit API',
       version: '1.0.0',
       description: 'AI-Powered Open-Source Contribution Assistant',
       docs: '/api/health',

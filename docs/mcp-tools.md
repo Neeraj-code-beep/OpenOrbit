@@ -1,10 +1,10 @@
 # Model Context Protocol (MCP) Integration
 
-PRPath includes a complete client implementation of the official **Model Context Protocol (MCP)** specification using `@modelcontextprotocol/sdk` (`^1.32.1`).
+OpenOrbit includes a complete client implementation of the official **Model Context Protocol (MCP)** specification using `@modelcontextprotocol/sdk` (`^1.32.1`).
 
 ## Architecture & Responsibilities
 
-The MCP boundary in PRPath is structured with clear separation of concerns:
+The MCP boundary in OpenOrbit is structured with clear separation of concerns:
 
 - **Client Lifecycle (`mcp.client.js`):** Manages `Client` and `StdioClientTransport`, connection establishment, and clean shutdown.
 - **Tool Registry (`mcp.registry.js`):** Validates tool invocation schemas against JSON Schema definitions.
@@ -33,7 +33,7 @@ The MCP boundary in PRPath is structured with clear separation of concerns:
 
 ## Registered MCP Tools
 
-PRPath defines three official tools compliant with the MCP schema:
+OpenOrbit defines three official tools compliant with the MCP schema:
 
 1. `github_search_issues`: Searches issues with query, label, language, and pagination options.
 2. `github_get_issue_details`: Retrieves body, comments, and labels for a specific issue number.
@@ -44,7 +44,7 @@ PRPath defines three official tools compliant with the MCP schema:
 ## Current Status & Live Server Setup
 
 ### Status: `PENDING_SERVER_CONFIG`
-To avoid ungrounded execution or spawning rogue background processes without developer intent, PRPath reports `PENDING_SERVER_CONFIG` when no external MCP server command is configured in `.env`.
+To avoid ungrounded execution or spawning rogue background processes without developer intent, OpenOrbit reports `PENDING_SERVER_CONFIG` when no external MCP server command is configured in `.env`.
 
 ### Step-by-Step Instructions to Connect a Live Server
 
@@ -61,7 +61,7 @@ To connect a live GitHub MCP server:
    MCP_SERVER_ARGS=["-y", "@modelcontextprotocol/server-github"]
    GITHUB_PERSONAL_ACCESS_TOKEN=ghp_your_token_here
    ```
-3. Restart the PRPath server:
+3. Restart the OpenOrbit server:
    ```bash
    npm --prefix server run dev
    ```

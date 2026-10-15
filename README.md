@@ -1,4 +1,4 @@
-# PRPath 🚀
+# OpenOrbit 🚀
 
 > **AI-Powered Open-Source Contribution Assistant**  
 > Bridging the gap from discovering a real GitHub issue to submitting a high-quality Pull Request.
@@ -9,11 +9,11 @@
 
 Contributing to open-source can be intimidating: understanding an unfamiliar codebase, isolating where a bug lives, setting up tests, and knowing how to structure a pull request takes time.
 
-**PRPath** guides developers through every step of their open-source journey:
+**OpenOrbit** guides developers through every step of their open-source journey:
 1. **Discover Real Issues:** Search live GitHub issues filtered by beginner-friendly labels (`good-first-issue`, `help wanted`), languages, and keywords.
 2. **Understand the Repository:** Inspect stars, forks, open issues, licenses, default branches, and verified README context.
 3. **AI-Assisted Contribution Planning:** Generate structured, actionable roadmaps powered by **Google Gemini** (cloud) or **Ollama** (offline local model), complete with target files, implementation steps, risks, acceptance criteria, and test plans.
-4. **Verified Facts vs AI Suggestions:** PRPath clearly distinguishes verified repository files from model suggestions.
+4. **Verified Facts vs AI Suggestions:** OpenOrbit clearly distinguishes verified repository files from model suggestions.
 5. **Draft Pull Request Descriptions:** Generates ready-to-use, conventional PR descriptions summarizing the fix, verified files, and verification checklists.
 6. **Model Context Protocol (MCP):** Prepared with the official `@modelcontextprotocol/sdk` client for extensible tool execution.
 
@@ -22,7 +22,7 @@ Contributing to open-source can be intimidating: understanding an unfamiliar cod
 ## Architecture
 
 ```
-PRPath/
+OpenOrbit/
 ├── client/          # React 19 + Vite 8 frontend (glassmorphism UI)
 ├── server/          # Express 5 backend API
 │   ├── src/
@@ -52,7 +52,7 @@ PRPath/
 ```bash
 # Clone and enter workspace
 git clone <repo-url>
-cd PRPath
+cd OpenOrbit
 
 # Install dependencies (root, server, client)
 npm install

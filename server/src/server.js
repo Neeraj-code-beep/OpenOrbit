@@ -6,7 +6,7 @@ const app = createApp();
 
 const server = app.listen(env.PORT, async () => {
   console.log(`\n========================================`);
-  console.log(`🚀 PRPath Backend Server Active`);
+  console.log(`🚀 OpenOrbit Backend Server Active`);
   console.log(`📡 URL: http://localhost:${env.PORT}`);
   console.log(`🩺 Health: http://localhost:${env.PORT}/api/health`);
   console.log(`🤖 AI Provider: ${env.AI_PROVIDER}`);
@@ -26,7 +26,7 @@ async function gracefulShutdown(signal) {
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
   await mcpClient.disconnect();
   server.close(() => {
-    console.log('PRPath server closed.');
+    console.log('OpenOrbit server closed.');
     process.exit(0);
   });
 }

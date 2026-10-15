@@ -1,4 +1,4 @@
-# Data Flow & Lifecycle in PRPath
+# Data Flow & Lifecycle in OpenOrbit
 
 This document traces the lifecycle of user actions through the application layers.
 

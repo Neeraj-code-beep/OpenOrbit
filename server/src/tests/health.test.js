@@ -17,7 +17,7 @@ describe('Health Check API', () => {
       const json = await res.json();
       assert.ok(json.status);
       assert.ok(json.timestamp);
-      assert.equal(json.service, 'PRPath Backend API');
+      assert.equal(json.service, 'OpenOrbit Backend API');
       assert.ok(json.checks);
       assert.ok(json.checks.github);
       assert.ok(json.checks.ai);

@@ -5,7 +5,7 @@
 export function buildContributionPlanPrompt({ issueTitle, issueBody, repoName, repoReadme = '', verifiedFiles = [] }) {
   const verifiedListStr = verifiedFiles.length > 0 ? verifiedFiles.join(', ') : 'None explicitly verified yet';
 
-  return `You are PRPath, an expert open-source contribution architect.
+  return `You are OpenOrbit, an expert open-source contribution architect.
 Your role is to analyze a real GitHub issue and provide a structured, actionable contribution plan for a developer wanting to solve it.
 
 CRITICAL INSTRUCTIONS & SAFETY RULES:

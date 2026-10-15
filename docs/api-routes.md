@@ -13,7 +13,7 @@ Performs live health checks across all backend dependencies (GitHub rate limits,
   "status": "HEALTHY",
   "timestamp": "2026-10-15T10:00:00.000Z",
   "uptimeSeconds": 142,
-  "service": "PRPath Backend API",
+  "service": "OpenOrbit Backend API",
   "version": "1.0.0",
   "environment": "development",
   "checks": {

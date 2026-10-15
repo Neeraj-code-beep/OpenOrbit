@@ -1,4 +1,4 @@
-# PRPath Automation & Scripts
+# OpenOrbit Automation & Scripts
 
 This folder is reserved for continuous integration, benchmarking, and repository maintenance scripts.
 

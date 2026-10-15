@@ -1,5 +1,5 @@
 /**
- * Unified frontend API client for communicating with PRPath Backend
+ * Unified frontend API client for communicating with OpenOrbit Backend
  */
 export class ApiError extends Error {
   constructor(message, status, code, details = null) {

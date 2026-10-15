@@ -45,7 +45,7 @@ export function App() {
 
   // Header Titles Mapping
   const titles = {
-    dashboard: { title: 'PRPath Dashboard', subtitle: 'Overview of issues, contribution activity, and live integrations' },
+    dashboard: { title: 'OpenOrbit Dashboard', subtitle: 'Overview of issues, contribution activity, and live integrations' },
     issues: { title: 'Discover GitHub Issues', subtitle: 'Explore real open-source issues with beginner-friendly labels' },
     repository: { title: 'Repository Inspection', subtitle: 'Review verified repository structure, stars, and README context' },
     contribution: { title: 'Contribution Workspace', subtitle: 'Step-by-step AI contribution plan & PR description generator' },

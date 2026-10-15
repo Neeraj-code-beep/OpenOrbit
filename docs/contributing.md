@@ -1,6 +1,6 @@
 # Detailed Contributor Guide
 
-Welcome to the PRPath project! This guide provides in-depth technical practices for contributors.
+Welcome to the OpenOrbit project! This guide provides in-depth technical practices for contributors.
 
 ## Project Structure & Conventions
 

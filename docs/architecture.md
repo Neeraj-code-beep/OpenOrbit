@@ -1,8 +1,8 @@
-# PRPath Architecture
+# OpenOrbit Architecture
 
 ## High-Level System Architecture
 
-PRPath is architected around the **"Human-in-the-Loop Contribution"** pattern. Rather than allowing an autonomous agent to execute arbitrary shell commands or commit unreviewed code, PRPath provides deterministic repository context, bounded AI planning, and human approval gates.
+OpenOrbit is architected around the **"Human-in-the-Loop Contribution"** pattern. Rather than allowing an autonomous agent to execute arbitrary shell commands or commit unreviewed code, OpenOrbit provides deterministic repository context, bounded AI planning, and human approval gates.
 
 ```
 +-------------------------------------------------------------+

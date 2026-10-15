@@ -18,7 +18,7 @@ export class GitHubClient {
   _getHeaders() {
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'PRPath-Contribution-Assistant/1.0',
+      'User-Agent': 'OpenOrbit-Contribution-Assistant/1.0',
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;

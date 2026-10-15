@@ -59,7 +59,7 @@ export class MCPClientService {
 
       this.client = new Client(
         {
-          name: 'PRPath-MCP-Client',
+          name: 'OpenOrbit-MCP-Client',
           version: '1.0.0',
         },
         {

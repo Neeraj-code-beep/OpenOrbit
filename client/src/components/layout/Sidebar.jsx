@@ -15,10 +15,10 @@ export function Sidebar({ currentTab, onSelectTab, health }) {
       {/* Brand Header */}
       <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-cyan))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: 18, boxShadow: 'var(--shadow-glow)' }}>
-          P
+          O
         </div>
         <div>
-          <h2 style={{ fontSize: 17, margin: 0, fontWeight: 700, letterSpacing: '-0.03em' }}>PRPath</h2>
+          <h2 style={{ fontSize: 17, margin: 0, fontWeight: 700, letterSpacing: '-0.03em' }}>OpenOrbit</h2>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Contribution Assistant</span>
         </div>
       </div>

@@ -1,11 +1,11 @@
 name: Feature Request
-description: Suggest an idea or enhancement for PRPath
+description: Suggest an idea or enhancement for OpenOrbit
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
-      value: Thank you for proposing a new feature for PRPath!
+      value: Thank you for proposing a new feature for OpenOrbit!
   - type: textarea
     id: problem
     attributes:

@@ -107,7 +107,7 @@ export function SettingsPage({ health, onRefreshHealth }) {
           </span>
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
-          PRPath implements the official <code>@modelcontextprotocol/sdk</code> client with lifecycle management,
+          OpenOrbit implements the official <code>@modelcontextprotocol/sdk</code> client with lifecycle management,
           registered tool definitions (<code>github_search_issues</code>, <code>github_get_issue_details</code>, <code>github_get_repo_readme</code>),
           and argument schema validation.
         </p>

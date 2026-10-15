@@ -1,9 +1,9 @@
 # Testing & Verification Guide
 
-PRPath employs unit, integration, and static analysis tests to maintain reliability.
+OpenOrbit employs unit, integration, and static analysis tests to maintain reliability.
 
 ## 1. Backend Testing
-PRPath uses the native Node.js test runner (`node:test` and `node:assert/strict`), which requires zero external heavy frameworks and executes rapidly.
+OpenOrbit uses the native Node.js test runner (`node:test` and `node:assert/strict`), which requires zero external heavy frameworks and executes rapidly.
 
 ### Running Backend Tests
 ```bash

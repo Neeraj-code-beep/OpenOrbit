@@ -139,7 +139,7 @@ export function ContributionPage({ selectedIssue, onNavigateToIssues, onNavigate
             <div className="card" style={{ background: 'var(--bg-secondary)', borderLeft: '4px solid var(--accent-cyan)' }}>
               <h4 style={{ margin: '0 0 6px 0' }}>💡 Setting up your AI Provider</h4>
               <p style={{ fontSize: 13, margin: '0 0 12px 0' }}>
-                PRPath supports Google Gemini (cloud) and Ollama (local model). You can configure your API key or local model in Settings.
+                OpenOrbit supports Google Gemini (cloud) and Ollama (local model). You can configure your API key or local model in Settings.
               </p>
               <Button size="sm" variant="primary" onClick={onNavigateToSettings}>
                 Open Settings & AI Configuration →

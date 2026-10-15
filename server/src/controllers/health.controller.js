@@ -33,7 +33,7 @@ export async function getHealth(req, res) {
     status: overall,
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(uptime),
-    service: 'PRPath Backend API',
+    service: 'OpenOrbit Backend API',
     version: '1.0.0',
     environment: env.NODE_ENV,
     checks: {

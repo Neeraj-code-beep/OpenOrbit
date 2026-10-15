@@ -1,6 +1,6 @@
 # Reproducible Setup & Getting Started
 
-Follow these steps to set up and run PRPath locally.
+Follow these steps to set up and run OpenOrbit locally.
 
 ## Prerequisites
 - **Node.js**: `v20.x` or `v22.x` (tested on Node `v22.18.0`)

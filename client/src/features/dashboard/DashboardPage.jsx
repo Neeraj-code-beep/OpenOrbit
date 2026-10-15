@@ -24,7 +24,7 @@ export function DashboardPage({ health, onNavigate, selectedIssue }) {
             Bridge the gap between discovering an issue and submitting a high-quality Pull Request.
           </h2>
           <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
-            PRPath uses real GitHub data and bounded AI planning to help you understand unfamiliar repositories,
+            OpenOrbit uses real GitHub data and bounded AI planning to help you understand unfamiliar repositories,
             isolate target files, draft implementation strategies, and craft clean PR descriptions—keeping you in complete control.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -107,7 +107,7 @@ export function DashboardPage({ health, onNavigate, selectedIssue }) {
       {/* Human in the Loop Principles */}
       <div className="card" style={{ background: 'var(--bg-secondary)' }}>
         <h3 style={{ fontSize: 15, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>🛡️</span> PRPath Architecture & Core Principles
+          <span>🛡️</span> OpenOrbit Architecture & Core Principles
         </h3>
         <div className="grid-3" style={{ marginTop: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>

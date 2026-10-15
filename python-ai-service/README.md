@@ -1,6 +1,6 @@
-# PRPath Python AI Service
+# OpenOrbit Python AI Service
 
-This directory is the reserved structural layer for PRPath's specialized Python AI analysis service.
+This directory is the reserved structural layer for OpenOrbit's specialized Python AI analysis service.
 
 ## Responsibility & Layer Boundaries
 - **Role:** Specialized repository context processing, code structure analysis, issue analysis, and contribution planning assistance.

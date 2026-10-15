@@ -1,1 +1,1 @@
-"""PRPath Python AI Analysis Layer."""
+"""OpenOrbit Python AI Analysis Layer."""

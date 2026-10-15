@@ -1,6 +1,6 @@
-# PRPath Design System & Aesthetics
+# OpenOrbit Design System & Aesthetics
 
-PRPath follows modern, high-contrast dark mode aesthetics with glassmorphism to maximize developer focus and visual clarity.
+OpenOrbit follows modern, high-contrast dark mode aesthetics with glassmorphism to maximize developer focus and visual clarity.
 
 ## Visual Design Tokens
 

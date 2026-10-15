@@ -1,6 +1,6 @@
 # AI Routing & Fallback Mechanics
 
-PRPath implements a provider-neutral AI architecture orchestrated by `server/src/services/ai/ai.router.js`.
+OpenOrbit implements a provider-neutral AI architecture orchestrated by `server/src/services/ai/ai.router.js`.
 
 ## Supported Providers
 

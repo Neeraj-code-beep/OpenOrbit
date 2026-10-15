@@ -1,4 +1,4 @@
-# PRPath MVP Plan & Milestones
+# OpenOrbit MVP Plan & Milestones
 
 ## Phase 1: MVP Core (Completed)
 - [x] Full stack scaffold with React 19 + Vite 8 frontend and Express 5 backend.

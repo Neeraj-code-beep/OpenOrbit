@@ -1,7 +1,7 @@
 {
-  "name": "prpath-server",
+  "name": "openorbit-server",
   "version": "1.0.0",
-  "description": "PRPath Backend API Server",
+  "description": "OpenOrbit Backend API Server",
   "type": "module",
   "main": "src/server.js",
   "scripts": {

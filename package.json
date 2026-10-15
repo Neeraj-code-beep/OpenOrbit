@@ -1,7 +1,7 @@
 {
-  "name": "prpath",
+  "name": "openorbit",
   "version": "1.0.0",
-  "description": "PRPath — AI-Powered Open Source Contribution Assistant",
+  "description": "OpenOrbit — AI-Powered Open Source Contribution Assistant",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",

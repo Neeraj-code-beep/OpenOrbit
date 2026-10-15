@@ -1,5 +1,5 @@
 /**
- * Normalizes raw GitHub issue data into predictable PRPath model
+ * Normalizes raw GitHub issue data into predictable OpenOrbit model
  */
 export function mapGitHubIssue(item) {
   if (!item) return null;
