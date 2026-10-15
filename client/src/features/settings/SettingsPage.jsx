@@ -1,138 +1,273 @@
-import { useState } from 'react';
-import { Button } from '../../components/common/Button.jsx';
+import { useState } from "react";
+import { Button } from "../../components/common/Button.jsx";
+import { ErrorState } from "../../components/common/ErrorState.jsx";
+import { Icon } from "../../components/common/Icon.jsx";
+import { StatusBadge } from "../../components/common/StatusBadge.jsx";
+import {
+  describeHealthError,
+  githubRate,
+  githubStatus,
+  mcpStatus,
+  providerStatus,
+} from "../../utils/status.js";
 
-export function SettingsPage({ health, onRefreshHealth }) {
+export function SettingsPage({
+  health,
+  healthConnection = "ready",
+  healthError,
+  onRefreshHealth,
+}) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await onRefreshHealth?.();
-    setIsRefreshing(false);
+    try {
+      await onRefreshHealth?.();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const gh = health?.checks?.github;
   const ai = health?.checks?.ai;
   const mcp = health?.checks?.mcp;
+  const gemini = ai?.gemini;
+  const ollama = ai?.ollama;
+  const rate = githubRate(gh);
+  const ready = healthConnection === "ready" && Boolean(health);
+  const unavailable = describeHealthError(healthError);
+
+  let authText = "—";
+  if (ready && gh && gh.status !== "ERROR") {
+    authText = gh.authenticated ? "Authenticated" : "Unauthenticated";
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Title & Action */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h2 style={{ fontSize: 20, margin: 0 }}>System Settings & Provider Configuration</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-            Check runtime connectivity, verify active providers, and review setup instructions.
-          </p>
-        </div>
-        <Button variant="secondary" onClick={handleRefresh} isLoading={isRefreshing}>
-          Refresh Health Status 🔄
+    <div className="page-stack">
+      {/* Intro & action */}
+      <div className="card-header" style={{ marginBottom: 0 }}>
+        <p style={{ fontSize: 14, maxWidth: "62ch" }}>
+          Check runtime connectivity, verify active providers, and review setup
+          instructions.
+        </p>
+        <Button
+          variant="secondary"
+          onClick={handleRefresh}
+          isLoading={isRefreshing}
+        >
+          <Icon name="refresh" size={16} /> Refresh status
         </Button>
       </div>
 
-      {/* Grid: Providers */}
-      <div className="grid-2">
-        {/* GitHub REST Configuration */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 16, margin: 0 }}>🐙 GitHub API Integration</h3>
-            <span className={`badge ${gh?.status === 'HEALTHY' ? 'badge-verified' : 'badge-suggested'}`}>
-              {gh?.status || 'UNKNOWN'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Auth Token Status:</span>
-              <strong style={{ color: 'var(--text-primary)' }}>
-                {gh?.authenticated ? 'Authenticated (5,000 req/hr)' : 'Unauthenticated (60 req/hr)'}
-              </strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Remaining Calls:</span>
-              <span>{gh?.rateLimit?.remaining ?? '—'} / {gh?.rateLimit?.limit ?? '60'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Resets At:</span>
-              <span>{gh?.rateLimit?.resetsAt ? new Date(gh.rateLimit.resetsAt).toLocaleTimeString() : 'N/A'}</span>
-            </div>
-          </div>
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-muted)' }}>
-            To increase rate limits, add <code>GITHUB_TOKEN=ghp_...</code> to your <code>.env</code> file.
-          </div>
-        </div>
+      {healthConnection === "unavailable" && (
+        <ErrorState
+          title="Backend health check unavailable"
+          message={`${unavailable.message}. Integration status cannot be determined until the API responds.`}
+          code={unavailable.code}
+          onRetry={handleRefresh}
+        />
+      )}
 
-        {/* AI Engine Configuration */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 16, margin: 0 }}>🤖 AI Provider Configuration</h3>
+      <div className="grid-2" style={{ alignItems: "start" }}>
+        {/* GitHub */}
+        <section className="card">
+          <div className="card-header">
+            <h3 className="card-title">
+              <Icon name="github" size={16} /> GitHub API
+            </h3>
+            <StatusBadge status={githubStatus(gh, healthConnection)} />
+          </div>
+          <dl className="kv-list">
+            <div className="kv-row">
+              <dt>Auth token</dt>
+              <dd>{authText}</dd>
+            </div>
+            <div className="kv-row">
+              <dt>Remaining calls</dt>
+              <dd>
+                {rate
+                  ? `${rate.remaining}${rate.limit != null ? ` / ${rate.limit}` : ""}`
+                  : "—"}
+              </dd>
+            </div>
+            <div className="kv-row">
+              <dt>Resets at</dt>
+              <dd>
+                {ready && gh?.status !== "ERROR" && gh?.rateLimit?.resetsAt
+                  ? new Date(gh.rateLimit.resetsAt).toLocaleTimeString()
+                  : "—"}
+              </dd>
+            </div>
+          </dl>
+          {gh?.status === "ERROR" && gh.error && (
+            <div
+              className="callout callout-danger"
+              role="note"
+              style={{ marginTop: 12 }}
+            >
+              <Icon name="alert" size={16} />
+              <span>GitHub check failed: {gh.error}</span>
+            </div>
+          )}
+          <p
+            style={{
+              marginTop: 14,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border-subtle)",
+              fontSize: 12,
+              color: "var(--text-muted)",
+            }}
+          >
+            To increase rate limits, add <code>GITHUB_TOKEN=ghp_...</code> to
+            your <code>.env</code> file.
+          </p>
+        </section>
+
+        {/* AI providers */}
+        <section className="card">
+          <div className="card-header">
+            <h3 className="card-title">
+              <Icon name="bot" size={16} /> AI providers
+            </h3>
             <span className="badge badge-primary">
-              Active: {ai?.activeProvider?.toUpperCase() || 'NONE'}
+              Active:{" "}
+              {ready && ai?.activeProvider
+                ? ai.activeProvider.toUpperCase()
+                : "—"}
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13 }}>
-            <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <strong>Google Gemini / Gemma:</strong>
-                <span className={`badge ${ai?.providers?.gemini?.configured ? 'badge-verified' : 'badge-suggested'}`}>
-                  {ai?.providers?.gemini?.configured ? 'Ready' : 'Missing Key'}
-                </span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              fontSize: 13,
+            }}
+          >
+            <div className="provider-box">
+              <div
+                className="integration-card-head"
+                style={{ marginBottom: 6 }}
+              >
+                <strong>Google Gemini / Gemma</strong>
+                <StatusBadge
+                  status={providerStatus(gemini, healthConnection)}
+                />
               </div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Model: <code>{ai?.providers?.gemini?.model || 'gemini-2.5-flash'}</code>
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Model: {gemini?.model ? <code>{gemini.model}</code> : "—"}
               </span>
+              {gemini?.message && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
+                  {gemini.message}
+                </span>
+              )}
             </div>
 
-            <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <strong>Ollama (Local Offline):</strong>
-                <span className={`badge ${ai?.providers?.ollama?.status === 'AVAILABLE' ? 'badge-verified' : 'badge-label'}`}>
-                  {ai?.providers?.ollama?.status || 'OFFLINE'}
-                </span>
+            <div className="provider-box">
+              <div
+                className="integration-card-head"
+                style={{ marginBottom: 6 }}
+              >
+                <strong>Ollama (local)</strong>
+                <StatusBadge
+                  status={providerStatus(ollama, healthConnection)}
+                />
               </div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Host: <code>{ai?.providers?.ollama?.host || 'http://127.0.0.1:11434'}</code> | Model: <code>{ai?.providers?.ollama?.targetModel || 'llama3:latest'}</code>
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Host: {ollama?.host ? <code>{ollama.host}</code> : "—"} · Model:{" "}
+                {ollama?.targetModel ? <code>{ollama.targetModel}</code> : "—"}
               </span>
+              {ollama?.message && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
+                  {ollama.message}
+                </span>
+              )}
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* Model Context Protocol Section */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ fontSize: 16, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>🔌</span> Model Context Protocol (MCP) Client Integration
+      {/* MCP */}
+      <section className="card">
+        <div className="card-header">
+          <h3 className="card-title">
+            <Icon name="plug" size={16} /> Model Context Protocol (MCP) client
           </h3>
-          <span className={`badge ${mcp?.status === 'CONNECTED' ? 'badge-verified' : 'badge-label'}`}>
-            {mcp?.status || 'PENDING_CONFIG'}
-          </span>
+          <StatusBadge status={mcpStatus(mcp, healthConnection)} />
         </div>
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
-          OpenOrbit implements the official <code>@modelcontextprotocol/sdk</code> client with lifecycle management,
-          registered tool definitions (<code>github_search_issues</code>, <code>github_get_issue_details</code>, <code>github_get_repo_readme</code>),
-          and argument schema validation.
+        <p style={{ fontSize: 13, marginBottom: 12 }}>
+          OpenOrbit implements the official{" "}
+          <code>@modelcontextprotocol/sdk</code> client with lifecycle
+          management, registered tool definitions (
+          <code>github_search_issues</code>,{" "}
+          <code>github_get_issue_details</code>,{" "}
+          <code>github_get_repo_readme</code>), and argument schema validation.
         </p>
+        {mcp?.lastError && (
+          <div
+            className="callout callout-danger"
+            role="note"
+            style={{ marginBottom: 12 }}
+          >
+            <Icon name="alert" size={16} />
+            <span>Last error: {mcp.lastError}</span>
+          </div>
+        )}
 
-        <div style={{ background: 'var(--bg-input)', padding: 14, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', fontSize: 12 }}>
-          <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>
-            Connecting a Live MCP Server:
+        <div className="code-block">
+          <strong
+            style={{
+              color: "var(--text-primary)",
+              display: "block",
+              marginBottom: 6,
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            Connecting a live MCP server
           </strong>
-          <code style={{ color: 'var(--accent-cyan)' }}>
-            # In your .env file:<br />
-            MCP_ENABLED=true<br />
-            MCP_SERVER_COMMAND=npx<br />
-            MCP_SERVER_ARGS='["-y", "@modelcontextprotocol/server-github"]'
-          </code>
+          {`# In your .env file:
+MCP_ENABLED=true
+MCP_SERVER_COMMAND=npx
+MCP_SERVER_ARGS='["-y", "@modelcontextprotocol/server-github"]'`}
         </div>
-      </div>
+      </section>
 
-      {/* Security Guarantee */}
-      <div className="card" style={{ background: 'var(--bg-secondary)', borderLeft: '4px solid var(--accent-emerald)' }}>
-        <h4 style={{ margin: '0 0 6px 0', color: 'var(--accent-emerald)' }}>🔒 Security & Privacy Boundary</h4>
-        <p style={{ fontSize: 13, margin: 0, color: 'var(--text-secondary)' }}>
-          Environment secrets (e.g. <code>GEMINI_API_KEY</code>, <code>GITHUB_TOKEN</code>) are strictly isolated on the backend server.
-          The client browser receives only non-sensitive telemetry and sanitized API responses.
-        </p>
-      </div>
+      {/* Security */}
+      <section
+        className="callout callout-success"
+        style={{ padding: "var(--space-lg)" }}
+      >
+        <Icon name="lock" size={18} />
+        <div>
+          <h3
+            className="card-title"
+            style={{ color: "var(--status-success)", marginBottom: 4 }}
+          >
+            Security & privacy boundary
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+            Environment secrets (e.g. <code>GEMINI_API_KEY</code>,{" "}
+            <code>GITHUB_TOKEN</code>) are strictly isolated on the backend
+            server. The client browser receives only non-sensitive telemetry and
+            sanitized API responses.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
