@@ -23,19 +23,20 @@ Contributing to open-source can be intimidating: understanding an unfamiliar cod
 
 ```
 OpenOrbit/
-├── client/          # React 19 + Vite 8 frontend (glassmorphism UI)
-├── server/          # Express 5 backend API
+├── client/            # React 19 + Vite 8 frontend (glassmorphism UI)
+├── server/            # Express 5 backend API
 │   ├── src/
-│   │   ├── config/       # Validated environment configuration
-│   │   ├── controllers/  # Health, GitHub, AI, and Contribution controllers
+│   │   ├── config/         # Validated environment configuration
+│   │   ├── controllers/    # Health, GitHub, AI, and Contribution controllers
 │   │   ├── services/
-│   │   │   ├── github/   # Real GitHub REST integration with rate limiting
-│   │   │   ├── ai/       # Multi-provider routing (Gemini + Ollama)
-│   │   │   ├── mcp/      # Official Model Context Protocol client
+│   │   │   ├── github/     # Real GitHub REST integration with rate limiting
+│   │   │   ├── ai/         # Multi-provider routing (Gemini + Ollama)
+│   │   │   ├── mcp/        # Official Model Context Protocol client
 │   │   │   └── contribution/ # Plan validation and PR description generator
-│   │   ├── middleware/   # Request-id, CORS, error handling, validation
-│   │   └── tests/        # Native Node.js test runner suites
-└── docs/            # Comprehensive architecture and API documentation
+│   │   ├── middleware/     # Request-id, CORS, error handling, validation
+│   │   └── tests/          # Native Node.js test runner suites
+├── python-ai-service/ # FastAPI Python AI & repository analysis service
+└── docs/              # Comprehensive architecture and API documentation
 ```
 
 ---
@@ -119,6 +120,7 @@ Explore the complete documentation in `docs/`:
 - [Security & Prompt Injection Defenses](docs/security.md)
 - [Setup & Local Run Guide](docs/setup.md)
 - [Testing & Quality Assurance](docs/testing.md)
+- [Python AI Service Architecture & API (Member 1)](docs/python-ai-service.md)
 - [Contributing Guidelines](docs/contributing.md)
 - [MVP Plan & Future Roadmap](docs/mvp-plan.md)
 
