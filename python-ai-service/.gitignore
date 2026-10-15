@@ -1,0 +1,24 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+ENV/
+env/
+
+# Distribution & packaging
+build/
+dist/
+*.egg-info/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
