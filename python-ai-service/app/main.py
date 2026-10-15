@@ -1,4 +1,3 @@
-
 """FastAPI application entry point for the Python AI Service."""
 
 from fastapi import FastAPI
@@ -14,6 +13,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Register API routers
 app.include_router(analysis.router)
 app.include_router(contribution.router)
 
