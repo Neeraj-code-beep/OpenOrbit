@@ -1,71 +1,108 @@
-"""Generate structured, evidence-aware contribution plans."""
+"""Contribution planning service interface for Member 2 implementation.
 
-from typing import Any
+Provides structured contribution planning, relevant file suggestion,
+and step-by-step guidance conforming to OpenOrbit's contract.
+"""
+
+from typing import List
+from app.schemas.contribution import (
+    ContributionPlanRequest,
+    ContributionPlanResponse,
+    PlanImplementationStep,
+    PlanRelevantFile,
+    PlanSuggestedPR,
+)
 
 
-def create_contribution_plan(
-    issue: dict[str, Any],
-    code_analysis: dict[str, Any],
-) -> dict[str, Any]:
-    """Create an actionable plan using existing issue and code analysis."""
+class ContributionPlannerService:
+    """Service responsible for generating structured open-source contribution roadmaps."""
 
-    title = str(issue.get("title", "")).strip()
-    summary = str(issue.get("summary", "")).strip()
+    def generate_plan(self, request: ContributionPlanRequest) -> ContributionPlanResponse:
+        """Generates a structured contribution plan for an open-source issue.
 
-    if not title:
-        raise ValueError("Issue title is required to create a plan.")
+        Serves as the foundation interface for Member 2's implementation.
+        """
+        title = request.issue_title
+        body = request.issue_body or ""
+        verified_files = request.verified_files or []
 
-    relevant_files = code_analysis.get("relevant_files", [])
-    referenced_files = issue.get("referenced_files", [])
+        # Identify candidate files from verified files matching query keywords
+        relevant_files: List[PlanRelevantFile] = []
+        for f in verified_files:
+            base = f.split("/")[-1].split(".")[0].lower()
+            if len(base) > 2 and (base in title.lower() or base in body.lower()):
+                relevant_files.append(
+                    PlanRelevantFile(
+                        file_path=f,
+                        reason="Matched issue keywords and component names",
+                        is_verified=True,
+                    )
+                )
 
-    # Combine only files explicitly supplied by the analysis layers.
-    files = sorted(
-        {
-            str(path)
-            for path in (
-                list(referenced_files)
-                + [
-                    item["path"]
-                    for item in relevant_files
-                    if isinstance(item, dict) and item.get("path")
-                ]
+        if not relevant_files and verified_files:
+            # Include top 2 verified files as primary starting points
+            for f in verified_files[:2]:
+                relevant_files.append(
+                    PlanRelevantFile(
+                        file_path=f,
+                        reason="Primary verified repository component",
+                        is_verified=True,
+                    )
+                )
+
+        if not relevant_files:
+            relevant_files.append(
+                PlanRelevantFile(
+                    file_path="README.md",
+                    reason="Starting documentation context",
+                    is_verified=False,
+                )
             )
-        }
-    )
 
-    steps = [
-        "Review the issue description and confirm the expected behavior.",
-        "Inspect the relevant source files and understand the affected code path.",
-        "Identify the root cause using code evidence and existing tests.",
-        "Implement the smallest change that addresses the confirmed cause.",
-        "Review the changes for regressions and unintended side effects.",
-    ]
+        steps = [
+            PlanImplementationStep(
+                step_number=1,
+                title="Reproduce the issue locally",
+                description=f"Inspect requirements or bug reports described in '{title}'. Set up local test suite.",
+                safety_notes="Do not make edits until you can reproduce the current behavior.",
+            ),
+            PlanImplementationStep(
+                step_number=2,
+                title="Implement proposed modifications",
+                description=f"Update the relevant components ({', '.join(rf.file_path for rf in relevant_files[:3])}). Maintain backwards compatibility.",
+                safety_notes="Keep modifications focused specifically on the scope of the issue.",
+            ),
+            PlanImplementationStep(
+                step_number=3,
+                title="Verify tests and run linters",
+                description="Run the test suite to ensure all unit and integration tests pass without regression.",
+                safety_notes="Ensure code formatting and linter checks pass before staging commits.",
+            ),
+        ]
 
-    if not files:
-        steps.insert(
-            1,
-            "Search the repository to identify files related to the issue.",
+        suggested_pr = PlanSuggestedPR(
+            title=f"fix: resolve {title[:50]}",
+            description=f"## Summary of Changes\n- Resolves: {title}\n\n## Testing\n- Tested locally against test suite",
         )
 
-    testing_suggestions = [
-        "Add or update a test that reproduces the reported problem.",
-        "Test the expected behavior and relevant edge cases.",
-        "Run the affected module's tests.",
-        "Run the broader test suite when available.",
-    ]
+        return ContributionPlanResponse(
+            issue_summary=f"Action plan for: {title}",
+            problem_interpretation=body if body else f"Technical resolution needed for {title}.",
+            relevant_files=relevant_files,
+            implementation_steps=steps,
+            dependencies_and_risks=["Potential interface regressions if public methods are changed."],
+            acceptance_criteria=[
+                f"Issue '{title}' is resolved.",
+                "All automated tests pass.",
+                "Code adheres to project guidelines.",
+            ],
+            test_plan=[
+                "Run existing unit test suite.",
+                "Add regression test specifically verifying fix for this issue.",
+            ],
+            uncertainties_and_questions=[],
+            suggested_pr=suggested_pr,
+        )
 
-    risks = [
-        "The root cause has not been confirmed until the relevant code is inspected.",
-        "Changing shared interfaces may affect other parts of the application.",
-    ]
 
-    return {
-        "issue_title": title,
-        "issue_summary": summary or title,
-        "relevant_files": files,
-        "implementation_steps": steps,
-        "testing_suggestions": testing_suggestions,
-        "potential_risks": risks,
-        "requires_human_review": True,
-    }
-
+contribution_planner_service = ContributionPlannerService()

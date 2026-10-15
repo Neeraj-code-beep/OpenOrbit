@@ -1,20 +1,24 @@
+import { useId } from "react";
+
 export function Input({
   label,
   error,
   value,
   onChange,
   placeholder,
-  type = 'text',
-  className = '',
+  type = "text",
+  className = "",
   id,
   ...props
 }) {
-  const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+  const generatedId = useId();
+  const inputId = id || generatedId;
+  const errorId = error ? `${inputId}-error` : undefined;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="field">
       {label && (
-        <label htmlFor={inputId} style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>
+        <label htmlFor={inputId} className="field-label">
           {label}
         </label>
       )}
@@ -25,10 +29,19 @@ export function Input({
         onChange={onChange}
         placeholder={placeholder}
         className={`input-field ${className}`}
-        style={error ? { borderColor: 'var(--accent-rose)' } : {}}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={errorId}
         {...props}
       />
-      {error && <span style={{ fontSize: 12, color: 'var(--accent-rose)' }}>{error}</span>}
+      {error && (
+        <span
+          id={errorId}
+          role="alert"
+          style={{ fontSize: 12, color: "var(--status-danger)" }}
+        >
+          {error}
+        </span>
+      )}
     </div>
   );
 }

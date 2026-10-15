@@ -1,39 +1,46 @@
 # OpenOrbit Python AI Service
 
-The Python AI Service is OpenOrbit's specialized AI layer for repository context processing, Python code analysis, issue analysis, and contribution planning. It uses FastAPI and a locally configured Ollama model for AI-assisted issue analysis.
+The Python AI Service is OpenOrbit's specialized AI layer for repository context processing, Python code analysis, issue analysis, and contribution planning. It uses FastAPI and can use a locally configured Ollama model for AI-assisted analysis.
 
-## Responsibilities & Layer Boundaries
+## Architecture & Responsibilities
 
-- **Role:** Analyze Python code structure, identify relevant repository files, analyze issues, and generate structured contribution plans.
-- **Communication Flow:** `React Frontend (client/)` → `Express Backend (server/)` → `Python AI Service (python-ai-service/)`
-- **AI Inference:** Uses a locally running Ollama model configured through environment variables.
-- **Security Boundary:** The browser must not call this service directly. The service does not independently execute arbitrary commands, modify repository files, or submit pull requests.
-- **Contribution Planning:** Generates recommendations for human review; it does not implement changes automatically.
+- **Communication flow:** `React Frontend (client/)` -> `Express Backend (server/)` -> `Python AI Service (python-ai-service/)`.
+- **Repository context:** Discovers repository files and extracts relevant code context.
+- **Analysis and planning:** Analyzes Python source and issues, and generates structured contribution plans.
+- **Security boundary:** The browser must not call this service directly. The service does not independently execute arbitrary commands, modify repository files, or submit pull requests.
+- **Human review:** Contribution plans are recommendations; the service does not implement changes automatically.
 
 ## Features
 
 - Python source validation and extraction of imports, functions, and classes.
-- Repository file discovery based on a search query.
+- Repository file discovery and context extraction.
 - Issue analysis with summaries, categories, referenced files, and suggested investigation steps.
-- Ollama integration with configurable URL, model, and timeout.
+- Ollama integration for local-model analysis.
 - Structured contribution plans with relevant files, implementation steps, testing suggestions, and potential risks.
 - Unit and API tests for core analysis, Ollama handling, and contribution planning.
 
-## Directory Structure
+## Project Structure
 
-- `app/core/` — Application configuration.
-- `app/api/routes/` — FastAPI API routes.
-- `app/schemas/` — Pydantic request and response schemas.
-- `app/services/` — Code analysis, issue analysis, Ollama client, and contribution planning.
-- `app/tests/` — Unit and API integration tests.
-- `app/main.py` — FastAPI application entry point.
+```text
+python-ai-service/
+├── API_CONTRACT.md
+├── app/
+│   ├── api/routes/       # Health, repository, analysis, and contribution endpoints
+│   ├── core/             # Configuration and logging
+│   ├── schemas/          # Request, response, and shared API models
+│   ├── services/         # Context, analysis, planning, and Ollama integration
+│   ├── tests/            # Pytest suite
+│   └── main.py           # FastAPI application and exception handlers
+├── .env.example
+└── requirements.txt
+```
 
 ## Requirements
 
 - Python 3.10 or newer.
 - Dependencies listed in `requirements.txt`.
-- [Ollama](https://ollama.com/) installed and running locally.
-- A model downloaded and available in Ollama.
+- Ollama installed and running locally for model-backed analysis.
+- A model available in Ollama; the default configured model is `llama3:latest`.
 
 ## Setup
 
@@ -61,46 +68,41 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Configure Ollama
+### 3. Configure the environment
 
-Start Ollama and download a model supported by your machine. For example:
+Copy `.env.example` to `.env` (for example, use `Copy-Item .env.example .env` in PowerShell or `cp .env.example .env` on macOS/Linux). Review `app/core/config.py` for supported settings and defaults.
+
+Start Ollama and download a model if needed:
 
 ```bash
-ollama pull llama3.2
+ollama pull llama3:latest
 ```
-
-Create a `.env` file in `python-ai-service/` using `.env.example` as a reference. Configure the variable names supported by `app/core/config.py`.
-
-Typical settings include:
-
-- `OLLAMA_BASE_URL` — Ollama API base URL.
-- `OLLAMA_MODEL` — Model name available in Ollama.
-- `OLLAMA_TIMEOUT` — Request timeout.
-
-Check `.env.example` and `app/core/config.py` for the exact supported names and default values.
 
 ### 4. Start the service
 
 From `python-ai-service/`:
 
 ```bash
-python -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-The service should be available at `http://127.0.0.1:8000`.
-
-Interactive API documentation: `http://127.0.0.1:8000/docs`
+The service is available at `http://127.0.0.1:8000`.
 
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | GET | `/` | Basic service information |
-| POST | `/analysis/code` | Analyze Python source code |
-| POST | `/analysis/issue` | Analyze an issue |
-| POST | `/contribution/plan` | Generate a structured contribution plan |
+| GET | `/api/health` | Health check |
+| GET | `/api/health/ready` | Readiness check |
+| POST | `/api/repository/tree` | Discover repository files |
+| POST | `/api/repository/context` | Build repository context |
+| POST | `/api/repository/extract-context` | Extract code context |
+| POST | `/api/analysis/code` | Analyze Python source code |
+| POST | `/api/analysis/issue` | Analyze an issue |
+| POST | `/api/contribution/plan` | Generate a structured contribution plan |
 
-Use Swagger UI at `/docs` to inspect request schemas and try the endpoints. Refer to the registered route modules for the current request and response contracts.
+Health endpoints are also available at `/health` and `/health/ready`. Interactive API documentation is available at [`/docs`](http://127.0.0.1:8000/docs), with ReDoc at [`/redoc`](http://127.0.0.1:8000/redoc). See [API_CONTRACT.md](API_CONTRACT.md) and the registered route modules for request and response details.
 
 ## Testing
 
@@ -110,13 +112,13 @@ Run tests from the repository root:
 python -m pytest python-ai-service/app/tests/ -v
 ```
 
-The test suite covers code analysis, issue analysis, Ollama client behavior, and contribution planning. Ollama-dependent behavior should be mocked in unit tests so tests do not require live model inference.
+Ollama-dependent behavior should be mocked in unit tests so tests do not require live model inference.
 
 ## Error Handling & Troubleshooting
 
 - **Ollama connection failure:** Ensure Ollama is running and the configured base URL is reachable.
-- **Model unavailable:** Verify the configured model name and download the model if necessary.
-- **Request timeout:** Check local model performance and adjust the configured timeout if appropriate.
+- **Model unavailable:** Verify the configured model and download it if necessary.
+- **Request timeout:** Check local model performance and whether Ollama is responding.
 - **Empty or invalid model output:** Issue analysis should use its fallback behavior rather than trusting malformed model output.
 - **Validation errors:** Inspect the response details in Swagger and compare the request body with the Pydantic schema.
 - **Import or startup errors:** Run Uvicorn from `python-ai-service/` so the `app` package can be imported correctly.
@@ -132,4 +134,3 @@ The test suite covers code analysis, issue analysis, Ollama client behavior, and
 ## Current Scope
 
 This service provides analysis and planning assistance. It does not autonomously execute shell commands, edit repository files, or create or merge pull requests.
-
