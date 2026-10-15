@@ -1,7 +1,7 @@
-import { IssueCard } from './IssueCard.jsx';
-import { LoadingState } from '../common/LoadingState.jsx';
-import { ErrorState } from '../common/ErrorState.jsx';
-import { EmptyState } from '../common/EmptyState.jsx';
+import { IssueCard } from "./IssueCard.jsx";
+import { LoadingState } from "../common/LoadingState.jsx";
+import { ErrorState } from "../common/ErrorState.jsx";
+import { EmptyState } from "../common/EmptyState.jsx";
 
 export function IssueList({
   issues,
@@ -13,14 +13,19 @@ export function IssueList({
   onRetry,
 }) {
   if (isLoading) {
-    return <LoadingState message="Discovering GitHub issues..." subtext="Fetching real issues from GitHub REST API" />;
+    return (
+      <LoadingState
+        message="Discovering GitHub issues..."
+        subtext="Fetching real issues from GitHub REST API"
+      />
+    );
   }
 
   if (error) {
     return (
       <ErrorState
         title="Could not load GitHub issues"
-        message={error.message || 'Error occurred while contacting GitHub'}
+        message={error.message || "Error occurred while contacting GitHub"}
         code={error.code}
         onRetry={onRetry}
       />
@@ -30,7 +35,7 @@ export function IssueList({
   if (!issues || issues.length === 0) {
     return (
       <EmptyState
-        icon="🎯"
+        icon="issues"
         title="No matching issues found"
         message="Try adjusting your keywords, language filter, or selecting a different label."
         actionText="Reset Filters"
@@ -40,7 +45,7 @@ export function IssueList({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="issue-list">
       {issues.map((issue) => (
         <IssueCard
           key={issue.id}

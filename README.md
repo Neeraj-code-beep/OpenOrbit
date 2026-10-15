@@ -120,7 +120,7 @@ Explore the complete documentation in `docs/`:
 - [Security & Prompt Injection Defenses](docs/security.md)
 - [Setup & Local Run Guide](docs/setup.md)
 - [Testing & Quality Assurance](docs/testing.md)
-- [Python AI Service Architecture & API (Member 1)](docs/python-ai-service.md)
+- [Python AI Service Contribution & Architecture (Member 1)](docs/OpenOrbit_Python_AI_Service_Contribution.md)
 - [Contributing Guidelines](docs/contributing.md)
 - [MVP Plan & Future Roadmap](docs/mvp-plan.md)
 

@@ -27,9 +27,16 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
-    # Ollama / Local Model Settings
+    # Ollama / Local Model Settings (Offline AI Fallback)
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
     DEFAULT_LOCAL_MODEL: str = "llama3:latest"
+
+    # Gemini Cloud AI Settings (Optional for Python AI Layer)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
+    # GitHub API Integration (Optional token for rate limits)
+    GITHUB_TOKEN: str = ""
 
     # Context Processing Limits
     MAX_CONTEXT_FILE_SIZE_KB: int = 256
