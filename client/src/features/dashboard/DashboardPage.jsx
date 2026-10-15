@@ -1,129 +1,201 @@
-import { Button } from '../../components/common/Button.jsx';
+import { Button } from "../../components/common/Button.jsx";
+import { ErrorState } from "../../components/common/ErrorState.jsx";
+import { Icon } from "../../components/common/Icon.jsx";
+import { StatusBadge } from "../../components/common/StatusBadge.jsx";
+import {
+  activeProviderEntry,
+  describeHealthError,
+  githubRate,
+  githubStatus,
+  mcpStatus,
+  providerStatus,
+} from "../../utils/status.js";
 
-export function DashboardPage({ health, onNavigate, selectedIssue }) {
+export function DashboardPage({
+  health,
+  healthConnection = "ready",
+  healthError,
+  onRetryHealth,
+  onNavigate,
+  selectedIssue,
+}) {
   const gh = health?.checks?.github;
   const ai = health?.checks?.ai;
   const mcp = health?.checks?.mcp;
+  const provider = activeProviderEntry(ai);
+  const rate = githubRate(gh);
+  const ready = healthConnection === "ready" && Boolean(health);
+  const modelName = provider?.model || provider?.targetModel;
+
+  const ghStatus = githubStatus(gh, healthConnection);
+  const aiStatus = providerStatus(provider, healthConnection);
+  const mcpState = mcpStatus(mcp, healthConnection);
+  const unavailable = describeHealthError(healthError);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {/* Hero Welcome Banner */}
-      <div
-        className="card"
-        style={{
-          background: 'radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.2), transparent 70%), var(--bg-card)',
-          borderColor: 'var(--border-medium)',
-          padding: '36px 32px',
-        }}
-      >
-        <div style={{ maxWidth: 720 }}>
-          <span className="badge badge-primary" style={{ marginBottom: 12 }}>
+    <div className="page-stack">
+      {/* Welcome / primary actions */}
+      <div className="card hero">
+        <div style={{ maxWidth: 760 }}>
+          <span className="badge badge-primary">
             Open Source Contribution Assistant
           </span>
-          <h2 style={{ fontSize: 26, margin: '8px 0 12px 0', fontWeight: 700 }}>
-            Bridge the gap between discovering an issue and submitting a high-quality Pull Request.
+          <h2 className="hero-title">
+            Bridge the gap between discovering an issue and submitting a
+            high-quality Pull Request.
           </h2>
-          <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
-            OpenOrbit uses real GitHub data and bounded AI planning to help you understand unfamiliar repositories,
-            isolate target files, draft implementation strategies, and craft clean PR descriptions—keeping you in complete control.
+          <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+            OpenOrbit uses real GitHub data and bounded AI planning to help you
+            understand unfamiliar repositories, isolate target files, draft
+            implementation strategies, and craft clean PR descriptions—keeping
+            you in complete control.
           </p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Button variant="primary" onClick={() => onNavigate('issues')}>
-              🎯 Discover Real Issues
+          <div className="row-wrap" style={{ gap: 10 }}>
+            <Button variant="primary" onClick={() => onNavigate("issues")}>
+              <Icon name="issues" size={16} /> Discover real issues
             </Button>
-            <Button variant="secondary" onClick={() => onNavigate('repository')}>
-              📦 Inspect a Repository
+            <Button
+              variant="secondary"
+              onClick={() => onNavigate("repository")}
+            >
+              <Icon name="repository" size={16} /> Inspect a repository
             </Button>
             {selectedIssue && (
-              <Button variant="secondary" onClick={() => onNavigate('contribution')}>
-                🛠️ Active Plan (#{selectedIssue.number})
+              <Button
+                variant="secondary"
+                onClick={() => onNavigate("contribution")}
+              >
+                <Icon name="contribution" size={16} /> Active plan (#
+                {selectedIssue.number})
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Live System Diagnostics Grid */}
-      <div>
-        <h3 style={{ fontSize: 16, marginBottom: 14, color: 'var(--text-primary)' }}>
-          System & Service Integrations (Live Telemetry)
+      {/* Live integration status */}
+      <section aria-labelledby="integrations-heading">
+        <h3 id="integrations-heading" className="section-title">
+          Service integrations · live status
         </h3>
+
+        {healthConnection === "unavailable" && (
+          <div style={{ marginBottom: 16 }}>
+            <ErrorState
+              title="Backend health check unavailable"
+              message={`${unavailable.message}. Integration status cannot be determined until the API responds.`}
+              code={unavailable.code}
+              onRetry={onRetryHealth}
+            />
+          </div>
+        )}
+
         <div className="grid-3">
           {/* GitHub Status */}
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 20 }}>🐙</span>
-              <span className={`badge ${gh?.status === 'HEALTHY' ? 'badge-verified' : 'badge-suggested'}`}>
-                {gh?.status || 'UNKNOWN'}
+          <div className="card integration-card">
+            <div className="integration-card-head">
+              <span className="integration-icon">
+                <Icon name="github" size={18} />
               </span>
+              <StatusBadge status={ghStatus} />
             </div>
-            <h4 style={{ fontSize: 14, margin: '0 0 4px 0' }}>GitHub REST API</h4>
-            <p style={{ fontSize: 12, margin: 0 }}>
-              Remaining calls: <strong style={{ color: 'var(--text-primary)' }}>{gh?.rateLimit?.remaining ?? '—'}</strong> / {gh?.rateLimit?.limit ?? '60'}
+            <h4 className="integration-card-title">GitHub REST API</h4>
+            <p className="integration-card-line">
+              Remaining calls:{" "}
+              <strong style={{ color: "var(--text-primary)" }}>
+                {rate
+                  ? `${rate.remaining}${rate.limit != null ? ` / ${rate.limit}` : ""}`
+                  : "—"}
+              </strong>
             </p>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, display: 'block' }}>
-              {gh?.authenticated ? 'Authenticated with GITHUB_TOKEN' : 'Public rate limits apply (60/hr)'}
+            <span className="integration-card-note">
+              {gh?.status === "ERROR" && gh.error
+                ? `GitHub check failed: ${gh.error}`
+                : ready && gh
+                  ? gh.authenticated
+                    ? "Authenticated with GITHUB_TOKEN"
+                    : "No GITHUB_TOKEN detected; public rate limits apply"
+                  : "No GitHub data received"}
             </span>
           </div>
 
           {/* AI Provider Status */}
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 20 }}>🤖</span>
-              <span className={`badge ${ai?.providers?.[ai?.activeProvider]?.status === 'AVAILABLE' ? 'badge-verified' : 'badge-suggested'}`}>
-                {ai?.providers?.[ai?.activeProvider]?.status || 'UNCONFIGURED'}
+          <div className="card integration-card">
+            <div className="integration-card-head">
+              <span className="integration-icon">
+                <Icon name="bot" size={18} />
               </span>
+              <StatusBadge status={aiStatus} />
             </div>
-            <h4 style={{ fontSize: 14, margin: '0 0 4px 0' }}>AI Provider ({ai?.activeProvider?.toUpperCase() || 'NONE'})</h4>
-            <p style={{ fontSize: 12, margin: 0 }}>
-              Model: <code style={{ color: 'var(--text-link)' }}>{ai?.providers?.gemini?.model || ai?.providers?.ollama?.targetModel || 'None'}</code>
+            <h4 className="integration-card-title">
+              AI Provider
+              {ready && ai?.activeProvider
+                ? ` (${ai.activeProvider.toUpperCase()})`
+                : ""}
+            </h4>
+            <p className="integration-card-line">
+              Model: {modelName ? <code>{modelName}</code> : <strong>—</strong>}
             </p>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, display: 'block' }}>
-              {ai?.activeProvider === 'gemini'
-                ? ai?.providers?.gemini?.configured ? 'Gemini API configured' : 'Add GEMINI_API_KEY in .env'
-                : 'Ollama local engine'}
+            <span className="integration-card-note">
+              {provider?.message ||
+                (ready && provider
+                  ? "Provider reported no additional details"
+                  : "No AI provider data received")}
             </span>
           </div>
 
           {/* MCP Integration Status */}
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 20 }}>🔌</span>
-              <span className={`badge ${mcp?.status === 'CONNECTED' ? 'badge-verified' : 'badge-label'}`}>
-                {mcp?.status || 'PENDING'}
+          <div className="card integration-card">
+            <div className="integration-card-head">
+              <span className="integration-icon">
+                <Icon name="plug" size={18} />
               </span>
+              <StatusBadge status={mcpState} />
             </div>
-            <h4 style={{ fontSize: 14, margin: '0 0 4px 0' }}>MCP Client Layer</h4>
-            <p style={{ fontSize: 12, margin: 0 }}>
-              Tools registered: <strong style={{ color: 'var(--text-primary)' }}>{mcp?.registeredToolsCount ?? 3}</strong>
+            <h4 className="integration-card-title">MCP Client Layer</h4>
+            <p className="integration-card-line">
+              Tools registered:{" "}
+              <strong style={{ color: "var(--text-primary)" }}>
+                {mcp?.registeredToolsCount ?? "—"}
+              </strong>
             </p>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, display: 'block' }}>
-              {mcp?.configured ? 'Custom MCP server specified' : 'Standby. See docs/mcp-tools.md'}
+            <span className="integration-card-note">
+              {mcp?.lastError
+                ? `Last error: ${mcp.lastError}`
+                : mcp?.instructions ||
+                  (ready && mcp
+                    ? "MCP status reported by backend"
+                    : "No MCP data received")}
             </span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Human in the Loop Principles */}
-      <div className="card" style={{ background: 'var(--bg-secondary)' }}>
-        <h3 style={{ fontSize: 15, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>🛡️</span> OpenOrbit Architecture & Core Principles
-        </h3>
-        <div className="grid-3" style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>1. Real GitHub Facts</strong>
-            All issue descriptions, repository stars, and branches come from verified GitHub REST endpoints.
+      {/* Principles */}
+      <section className="card" aria-labelledby="principles-heading">
+        <div className="card-header">
+          <h3 id="principles-heading" className="card-title">
+            <Icon name="lock" size={16} /> How OpenOrbit works
+          </h3>
+        </div>
+        <div className="grid-3">
+          <div className="principle">
+            <strong>1. Real GitHub facts</strong>
+            All issue descriptions, repository stars, and branches come from
+            verified GitHub REST endpoints.
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>2. Contained Prompt Safety</strong>
-            Untrusted issue descriptions are isolated inside XML boundaries to prevent prompt injections.
+          <div className="principle">
+            <strong>2. Contained prompt safety</strong>
+            Untrusted issue descriptions are isolated inside XML boundaries to
+            prevent prompt injections.
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>3. Human Authority</strong>
-            AI provides recommendations and draft plans. You make all file edits and retain full control over git commits.
+          <div className="principle">
+            <strong>3. Human authority</strong>
+            AI provides recommendations and draft plans. You make all file edits
+            and retain full control over git commits.
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
