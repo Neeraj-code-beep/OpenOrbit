@@ -7,14 +7,21 @@ import { AppError } from '../../utils/app-error.js';
 export class GitHubClient {
   constructor() {
     this.baseUrl = env.GITHUB_API_BASE;
-    this.token = env.GITHUB_TOKEN;
+    this._customToken = undefined;
     this.timeoutMs = 12000;
   }
 
   /**
-   * Builds request headers
-   * @private
+   * Current GitHub token (defaults dynamically to env.GITHUB_TOKEN unless explicitly set)
    */
+  get token() {
+    return this._customToken !== undefined ? this._customToken : env.GITHUB_TOKEN;
+  }
+
+  set token(value) {
+    this._customToken = value;
+  }
+
   /**
    * Builds request headers
    * @private

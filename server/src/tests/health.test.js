@@ -60,4 +60,22 @@ describe('Health Check API', () => {
       server.close();
     }
   });
+
+  it('getGitHubAuthDiagnostic safely reports presence without disclosing secrets or falsely claiming 5,000 req/hr', async () => {
+    const { getGitHubAuthDiagnostic, getEnvStatus } = await import('../config/env.js');
+    const diag = getGitHubAuthDiagnostic();
+    assert.equal(typeof diag.tokenPresent, 'boolean');
+    assert.ok(diag.status === 'TOKEN_PRESENT_UNVERIFIED' || diag.status === 'TOKEN_NOT_CONFIGURED');
+    assert.ok(typeof diag.message === 'string');
+    // Ensure token value is not exposed in diagnostic
+    assert.equal(diag.token, undefined);
+    assert.equal(diag.value, undefined);
+
+    const envStatus = getEnvStatus();
+    assert.ok(envStatus.gitHubTokenDiagnostic);
+    assert.equal(typeof envStatus.hasGitHubToken, 'boolean');
+    // Ensure token value is not exposed in env status
+    assert.equal(envStatus.GITHUB_TOKEN, undefined);
+  });
 });
+

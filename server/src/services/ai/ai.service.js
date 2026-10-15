@@ -45,7 +45,7 @@ export class AIService {
     if (owner && repo && this.mcp && this.mcp.isConnected()) {
       // 1A: Official GitHub MCP server tool: get_file_contents
       if (this.mcp.hasTool('get_file_contents')) {
-        for (const readmeFilename of ['README.md', 'Readme.md', 'readme.md']) {
+        for (const readmeFilename of ['README.md', 'README', 'Readme.md', 'readme.md']) {
           if (repoReadme) break;
           try {
             const mcpRes = await this.mcp.invokeTool('get_file_contents', {

@@ -7,6 +7,12 @@ const __dirname = path.dirname(__filename);
 
 // Load .env from server directory first, fallback to root if needed
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Clean up empty string values so fallback root .env or aliases can populate them
+['GITHUB_TOKEN', 'GITHUB_PERSONAL_ACCESS_TOKEN', 'GH_TOKEN', 'GEMINI_API_KEY', 'MONGODB_URI', 'JWT_SECRET'].forEach((key) => {
+  if (process.env[key] === '') {
+    delete process.env[key];
+  }
+});
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 export const env = {
@@ -14,8 +20,11 @@ export const env = {
   PORT: parseInt(process.env.PORT || '5000', 10),
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
   
-  // GitHub Integration (Optional token for higher rate limits)
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  // GitHub Integration (Supports GITHUB_TOKEN, GITHUB_PERSONAL_ACCESS_TOKEN, or GH_TOKEN)
+  GITHUB_TOKEN: (() => {
+    const raw = process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GH_TOKEN || '';
+    return raw.trim().replace(/^["']|["']$/g, '').trim();
+  })(),
   GITHUB_API_BASE: process.env.GITHUB_API_BASE || 'https://api.github.com',
 
   // AI Provider: 'gemini' | 'ollama' | 'none'
@@ -119,6 +128,22 @@ export function getClearCookieOptions() {
 }
 
 /**
+ * Safe diagnostic reporting GitHub token presence without revealing token value
+ * Does NOT claim the token is valid or that a 5,000 req/hr rate limit is granted;
+ * live token validity and limits are verified only upon making authenticated GitHub API requests.
+ */
+export function getGitHubAuthDiagnostic() {
+  const tokenPresent = Boolean(env.GITHUB_TOKEN);
+  return {
+    tokenPresent,
+    status: tokenPresent ? 'TOKEN_PRESENT_UNVERIFIED' : 'TOKEN_NOT_CONFIGURED',
+    message: tokenPresent
+      ? 'GitHub token is present in environment (live validity deferred to API request verification)'
+      : 'No GitHub token configured; requests use unauthenticated 60 req/hr rate limit',
+  };
+}
+
+/**
  * Validates critical environment configuration and returns non-sensitive status
  */
 export function getEnvStatus() {
@@ -130,6 +155,7 @@ export function getEnvStatus() {
     hasMongoUri: Boolean(env.MONGODB_URI),
     hasJwtSecret: Boolean(env.JWT_SECRET),
     hasGitHubToken: Boolean(env.GITHUB_TOKEN),
+    gitHubTokenDiagnostic: getGitHubAuthDiagnostic(),
     aiProvider: env.AI_PROVIDER,
     hasGeminiKey: Boolean(env.GEMINI_API_KEY),
     geminiModel: env.GEMINI_MODEL,
