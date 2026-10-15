@@ -21,7 +21,25 @@ describe('Health Check API', () => {
       assert.ok(json.checks);
       assert.ok(json.checks.github);
       assert.ok(json.checks.ai);
+      assert.ok(json.checks.ai.gemini, 'checks.ai.gemini should be defined');
+      assert.ok(json.checks.ai.ollama, 'checks.ai.ollama should be defined');
       assert.ok(json.checks.mcp);
+      assert.ok(json.checks.pythonService);
+    } finally {
+      server.close();
+    }
+  });
+
+  it('GET /api/v1/health returns 200 via versioned route alias', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/health`);
+      assert.equal(res.status, 200);
+      const json = await res.json();
+      assert.ok(json.checks.ai.gemini);
+      assert.ok(json.checks.ai.ollama);
     } finally {
       server.close();
     }

@@ -2,6 +2,7 @@ import { env, getEnvStatus } from '../config/env.js';
 import { githubService } from '../services/github/github.service.js';
 import { aiRouter } from '../services/ai/ai.router.js';
 import { mcpClient } from '../services/mcp/mcp.client.js';
+import { pythonAIClient } from '../services/ai/python-ai.client.js';
 import { getDBStatus } from '../config/db.js';
 
 /**
@@ -11,9 +12,10 @@ export async function getHealth(req, res) {
   const uptime = process.uptime();
 
   // Run live health checks concurrently
-  const [ghRateLimit, aiStatus] = await Promise.all([
+  const [ghRateLimit, aiStatus, pythonStatus] = await Promise.all([
     githubService.checkRateLimit(),
     aiRouter.checkAllProviders(),
+    pythonAIClient.checkHealth(),
   ]);
 
   const mcpStatus = mcpClient.getStatus();
@@ -21,11 +23,15 @@ export async function getHealth(req, res) {
 
   // Determine overall status
   let overall = 'HEALTHY';
-  if (ghRateLimit.remaining === 0) {
+  if (ghRateLimit.error) {
+    overall = 'DEGRADED_GITHUB_UNAVAILABLE';
+  } else if (ghRateLimit.remaining === 0) {
     overall = 'DEGRADED_GITHUB_RATE_LIMITED';
   } else if (
-    (envSummary.aiProvider === 'gemini' && !envSummary.hasGeminiKey) ||
-    (envSummary.aiProvider === 'ollama' && aiStatus.providers.ollama.status === 'OFFLINE')
+    envSummary.aiProvider !== 'none' && (
+      (envSummary.aiProvider === 'gemini' && !envSummary.hasGeminiKey) ||
+      (envSummary.aiProvider === 'ollama' && aiStatus.providers.ollama.status === 'OFFLINE')
+    )
   ) {
     overall = 'DEGRADED_AI_UNAVAILABLE';
   }
@@ -54,6 +60,7 @@ export async function getHealth(req, res) {
         ollama: aiStatus.providers.ollama,
       },
       mcp: mcpStatus,
+      pythonService: pythonStatus,
       database: getDBStatus(),
     },
   });

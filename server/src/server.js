@@ -18,10 +18,10 @@ async function startServer() {
     }
   }
 
-  server = app.listen(env.PORT, async () => {
+  server = app.listen(env.PORT, '0.0.0.0', async () => {
     console.log(`\n========================================`);
     console.log(`🚀 OpenOrbit Backend Server Active`);
-    console.log(`📡 URL: http://localhost:${env.PORT}`);
+    console.log(`📡 URL: http://0.0.0.0:${env.PORT} (http://localhost:${env.PORT})`);
     console.log(`🩺 Health: http://localhost:${env.PORT}/api/health`);
     console.log(`🤖 AI Provider: ${env.AI_PROVIDER}`);
     console.log(`🔑 GitHub Token: ${env.GITHUB_TOKEN ? 'Configured (5,000 req/hr)' : 'Unauthenticated (60 req/hr)'}`);

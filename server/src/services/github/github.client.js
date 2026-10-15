@@ -15,13 +15,18 @@ export class GitHubClient {
    * Builds request headers
    * @private
    */
-  _getHeaders() {
+  /**
+   * Builds request headers
+   * @private
+   */
+  _getHeaders(customToken) {
+    const token = customToken || this.token;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
       'User-Agent': 'OpenOrbit-Contribution-Assistant/1.0',
     };
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   }
@@ -30,9 +35,13 @@ export class GitHubClient {
    * Performs an HTTP request to the GitHub API
    * @param {string} endpoint - API path, e.g. '/search/issues'
    * @param {Object} [queryParams={}]
+   * @param {Object} [options={}]
+   * @param {string} [options.token] - Optional user OAuth token
+   * @param {string} [options.method='GET']
+   * @param {any} [options.body]
    * @returns {Promise<{ data: any, rateLimit: { limit: number, remaining: number, reset: number } }>}
    */
-  async request(endpoint, queryParams = {}) {
+  async request(endpoint, queryParams = {}, options = {}) {
     const url = new URL(endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`);
     
     for (const [key, value] of Object.entries(queryParams)) {
@@ -44,10 +53,20 @@ export class GitHubClient {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
+    const headers = {
+      ...this._getHeaders(options.token),
+      ...(options.headers || {}),
+    };
+
+    if (options.body && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     try {
       const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: this._getHeaders(),
+        method: options.method || 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
         signal: controller.signal,
       });
 

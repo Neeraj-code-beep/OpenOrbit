@@ -66,3 +66,71 @@ export function mapGitHubRepository(repo) {
     updatedAt: repo.updated_at,
   };
 }
+
+/**
+ * Normalizes raw GitHub pull request data
+ */
+export function mapGitHubPullRequest(pr) {
+  if (!pr) return null;
+
+  return {
+    id: pr.id,
+    number: pr.number,
+    title: pr.title,
+    body: pr.body || '',
+    state: pr.state,
+    htmlUrl: pr.html_url,
+    createdAt: pr.created_at,
+    updatedAt: pr.updated_at,
+    closedAt: pr.closed_at || null,
+    mergedAt: pr.merged_at || null,
+    isDraft: Boolean(pr.draft),
+    author: pr.user ? pr.user.login : 'unknown',
+    authorAvatar: pr.user ? pr.user.avatar_url : null,
+    baseBranch: pr.base ? pr.base.ref : '',
+    headBranch: pr.head ? pr.head.ref : '',
+    labels: Array.isArray(pr.labels)
+      ? pr.labels.map((l) => (typeof l === 'string' ? { name: l } : { name: l.name, color: l.color }))
+      : [],
+  };
+}
+
+/**
+ * Normalizes raw GitHub commit data
+ */
+export function mapGitHubCommit(c) {
+  if (!c) return null;
+
+  const commitDetails = c.commit || {};
+  const author = commitDetails.author || {};
+  const committer = commitDetails.committer || {};
+
+  return {
+    sha: c.sha,
+    shortSha: c.sha ? c.sha.slice(0, 7) : '',
+    message: commitDetails.message || '',
+    authorName: author.name || 'Unknown',
+    authorEmail: author.email || '',
+    date: author.date || committer.date || null,
+    authorAvatar: c.author ? c.author.avatar_url : null,
+    authorLogin: c.author ? c.author.login : null,
+    htmlUrl: c.html_url,
+  };
+}
+
+/**
+ * Normalizes raw GitHub activity / event stream data
+ */
+export function mapGitHubActivity(event) {
+  if (!event) return null;
+
+  return {
+    id: event.id,
+    type: event.type,
+    actor: event.actor ? event.actor.login : 'unknown',
+    actorAvatar: event.actor ? event.actor.avatar_url : null,
+    repo: event.repo ? event.repo.name : '',
+    createdAt: event.created_at,
+    action: event.payload ? event.payload.action || null : null,
+  };
+}

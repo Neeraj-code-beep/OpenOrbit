@@ -11,7 +11,12 @@ export function createApp() {
   const app = express();
 
   // Security & CORS
+  const defaultLocalOrigins = env.NODE_ENV !== 'production'
+    ? ['http://localhost:5173', 'http://127.0.0.1:5173']
+    : [];
+
   const configuredOrigins = [
+    ...defaultLocalOrigins,
     ...env.CORS_ORIGIN.split(','),
     env.CLIENT_ORIGIN,
   ].map((o) => o?.trim()).filter(Boolean);

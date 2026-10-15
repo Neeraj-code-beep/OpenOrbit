@@ -18,8 +18,22 @@ export class GeminiProvider {
     }
   }
 
+  getClient() {
+    const currentKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!this._client && currentKey) {
+      this.apiKey = currentKey;
+      this.modelName = env.GEMINI_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      try {
+        this._client = new GoogleGenAI({ apiKey: this.apiKey });
+      } catch (err) {
+        console.warn('[GEMINI_INIT_WARN] Failed to instantiate GoogleGenAI client:', err.message);
+      }
+    }
+    return this._client;
+  }
+
   isConfigured() {
-    return Boolean(this.apiKey && this._client);
+    return Boolean((env.GEMINI_API_KEY || process.env.GEMINI_API_KEY) && this.getClient());
   }
 
   /**
@@ -56,14 +70,22 @@ export class GeminiProvider {
       );
     }
 
+    const client = this.getClient();
+    const isGemma = (this.modelName || '').toLowerCase().includes('gemma');
+
     try {
-      const response = await this._client.models.generateContent({
+      const config = {
+        temperature: 0.2,
+      };
+      // Gemma models on Gemini API do not support responseMimeType: 'application/json'
+      if (!isGemma) {
+        config.responseMimeType = 'application/json';
+      }
+
+      const response = await client.models.generateContent({
         model: this.modelName,
         contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-        },
+        config,
       });
 
       const text = response.text;

@@ -58,6 +58,7 @@ export const GITHUB_MCP_TOOLS = [
   {
     name: 'github_get_repo_readme',
     description: 'Retrieve the README markdown content of a GitHub repository for context.',
+    isConsequential: false,
     inputSchema: {
       type: 'object',
       properties: {
@@ -71,6 +72,68 @@ export const GITHUB_MCP_TOOLS = [
         },
       },
       required: ['owner', 'repo'],
+    },
+  },
+  {
+    name: 'github_create_issue_comment',
+    description: 'Add a comment to a GitHub issue. Consequential: mutates repository state and requires explicit approval.',
+    isConsequential: true,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        owner: {
+          type: 'string',
+          description: 'Repository owner',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name',
+        },
+        issueNumber: {
+          type: 'number',
+          description: 'Issue number',
+        },
+        body: {
+          type: 'string',
+          description: 'Comment body text',
+        },
+      },
+      required: ['owner', 'repo', 'issueNumber', 'body'],
+    },
+  },
+  {
+    name: 'github_create_pull_request',
+    description: 'Open a pull request on GitHub. Consequential: creates real PR and notifies maintainers; requires explicit approval.',
+    isConsequential: true,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        owner: {
+          type: 'string',
+          description: 'Target repository owner',
+        },
+        repo: {
+          type: 'string',
+          description: 'Target repository name',
+        },
+        title: {
+          type: 'string',
+          description: 'Pull request title',
+        },
+        head: {
+          type: 'string',
+          description: 'Branch containing the changes',
+        },
+        base: {
+          type: 'string',
+          description: 'Branch to merge into (e.g., main)',
+        },
+        body: {
+          type: 'string',
+          description: 'Pull request description',
+        },
+      },
+      required: ['owner', 'repo', 'title', 'head', 'base'],
     },
   },
 ];

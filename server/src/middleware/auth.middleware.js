@@ -93,3 +93,41 @@ export async function requireAuth(req, res, next) {
     );
   }
 }
+
+/**
+ * Optional Authentication Middleware
+ * Populates req.user if a valid session exists, but allows unauthenticated requests through
+ */
+export async function optionalAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = verifyJwtToken(token);
+    const userId = decoded.sub || decoded.id;
+    if (!userId) {
+      req.user = null;
+      return next();
+    }
+
+    const user = await User.findById(userId).select('-password');
+    if (user) {
+      req.user = user.toSafeObject ? user.toSafeObject() : {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    } else {
+      req.user = null;
+    }
+  } catch {
+    req.user = null;
+  }
+
+  next();
+}

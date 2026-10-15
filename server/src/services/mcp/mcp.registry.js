@@ -6,35 +6,73 @@ import { AppError } from '../../utils/app-error.js';
  */
 export class MCPRegistry {
   constructor() {
-    this.tools = new Map();
-    // Register standard default GitHub tools
+    this.localTools = new Map();
+    this.remoteTools = new Map();
+    // Register standard default GitHub tools as reference specifications
     for (const tool of GITHUB_MCP_TOOLS) {
-      this.tools.set(tool.name, tool);
+      this.localTools.set(tool.name, tool);
     }
   }
 
   /**
-   * Register a new tool specification
+   * Register a remotely discovered tool specification from an active MCP server
    */
-  registerTool(toolDef) {
+  registerRemoteTool(toolDef) {
     if (!toolDef || !toolDef.name) {
       throw new AppError('Invalid MCP tool definition: missing name', 400, 'MCP_INVALID_TOOL_DEF');
     }
-    this.tools.set(toolDef.name, toolDef);
+    this.remoteTools.set(toolDef.name, toolDef);
   }
 
   /**
-   * Returns all registered tools
+   * Backwards-compatible alias for registering a tool
+   */
+  registerTool(toolDef) {
+    this.registerRemoteTool(toolDef);
+  }
+
+  /**
+   * Clear all remotely discovered tools
+   */
+  clearRemoteTools() {
+    this.remoteTools.clear();
+  }
+
+  /**
+   * Returns all discovered remote tools
+   */
+  listRemoteTools() {
+    return Array.from(this.remoteTools.values());
+  }
+
+  /**
+   * Returns standard reference tools
+   */
+  listLocalTools() {
+    return Array.from(this.localTools.values());
+  }
+
+  /**
+   * Returns active tools (remote tools if connected, otherwise local fallback specifications)
    */
   listTools() {
-    return Array.from(this.tools.values());
+    return this.remoteTools.size > 0
+      ? Array.from(this.remoteTools.values())
+      : Array.from(this.localTools.values());
   }
 
   /**
-   * Gets a single tool by name
+   * Gets a tool by name, checking remote tools first then local reference definitions
    */
   getTool(name) {
-    return this.tools.get(name);
+    return this.remoteTools.get(name) || this.localTools.get(name);
+  }
+
+  /**
+   * Checks if a tool was discovered remotely
+   */
+  hasRemoteTool(name) {
+    return this.remoteTools.has(name);
   }
 
   /**

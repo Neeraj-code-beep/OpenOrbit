@@ -88,4 +88,25 @@ describe('Contribution Plan & PR Description Services', () => {
     assert.ok(prompt.includes('<untrusted_content>'));
     assert.ok(prompt.includes('</untrusted_content>'));
   });
+
+  it('validates PR description body and rejects missing plan', async () => {
+    const { validatePRDescriptionBody } = await import('../validators/contribution.validator.js');
+    const errorsEmpty = validatePRDescriptionBody({});
+    assert.ok(errorsEmpty.length > 0);
+    assert.match(errorsEmpty[0], /plan is required/i);
+
+    const errorsValid = validatePRDescriptionBody({ plan: { issueSummary: 'Test' } });
+    assert.equal(errorsValid.length, 0);
+  });
+
+  it('accepts long issue bodies (>30,000 chars) in contribution plan validator', async () => {
+    const { validateContributionPlanBody } = await import('../validators/contribution.validator.js');
+    const longBody = 'a'.repeat(35000);
+    const errors = validateContributionPlanBody({
+      issueTitle: 'Huge issue',
+      issueBody: longBody,
+      repoName: 'test-repo',
+    });
+    assert.equal(errors.length, 0);
+  });
 });

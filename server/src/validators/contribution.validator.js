@@ -19,16 +19,11 @@ export function validateContributionPlanBody(body) {
     errors.push('repoName must be a string');
   }
 
-  // Ensure issue body is within reasonable bounded size to prevent oversized prompt abuse
-  if (body.issueBody && body.issueBody.length > 30000) {
-    errors.push('issueBody exceeds maximum allowed size (30,000 characters)');
-  }
-
   return errors;
 }
 
 /**
- * Validates plan object submitted for validation or PR description generation
+ * Validates plan object submitted for validation
  */
 export function validatePlanObject(body) {
   const errors = [];
@@ -43,3 +38,18 @@ export function validatePlanObject(body) {
   }
   return errors;
 }
+
+/**
+ * Validates request body for PR description generation
+ */
+export function validatePRDescriptionBody(body) {
+  const errors = [];
+  if (!body || typeof body !== 'object') {
+    return ['Request body must be a valid JSON object'];
+  }
+  if (!body.plan || typeof body.plan !== 'object') {
+    errors.push('plan is required and must be an object');
+  }
+  return errors;
+}
+

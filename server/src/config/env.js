@@ -29,6 +29,9 @@ export const env = {
   OLLAMA_HOST: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434',
   OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'llama3:latest',
 
+  // Python AI Service Configuration
+  PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL || 'http://127.0.0.1:8000',
+
   // Database Configuration
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/openorbit',
 
@@ -46,6 +49,41 @@ export const env = {
   // Cookie Configuration
   COOKIE_NAME: 'openorbit_token',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || process.env.CORS_ORIGIN || 'http://localhost:5173',
+
+  // GitHub App OAuth & Token Encryption Configuration
+  ...(() => {
+    const clientId = process.env.GITHUB_APP_CLIENT_ID || '';
+    const clientSecret = process.env.GITHUB_APP_CLIENT_SECRET || '';
+    const callbackUrl = process.env.GITHUB_APP_CALLBACK_URL || 'http://localhost:5000/api/v1/auth/github/callback';
+    const keyRaw = process.env.GITHUB_ENCRYPTION_KEY ? process.env.GITHUB_ENCRYPTION_KEY.trim() : '';
+
+    const isOAuthConfigured = Boolean(clientId || clientSecret);
+
+    // If OAuth is configured, ensure full config and encryption key are valid
+    if (isOAuthConfigured) {
+      if (!clientId || !clientSecret) {
+        throw new Error('FATAL: Both GITHUB_APP_CLIENT_ID and GITHUB_APP_CLIENT_SECRET must be configured when GitHub App authentication is enabled.');
+      }
+      if (!keyRaw) {
+        throw new Error('FATAL: GITHUB_ENCRYPTION_KEY is required to enable GitHub App authentication (tokens must be encrypted at rest).');
+      }
+    }
+
+    // Validate key format whenever an encryption key is provided
+    if (keyRaw) {
+      if (keyRaw.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(keyRaw)) {
+        throw new Error('FATAL: GITHUB_ENCRYPTION_KEY must be a valid 64-character hexadecimal string (32 bytes / 256 bits).');
+      }
+    }
+
+    return {
+      GITHUB_APP_CLIENT_ID: clientId,
+      GITHUB_APP_CLIENT_SECRET: clientSecret,
+      GITHUB_APP_CALLBACK_URL: callbackUrl,
+      GITHUB_ENCRYPTION_KEY: keyRaw,
+      GITHUB_AUTH_ENABLED: isOAuthConfigured && Boolean(keyRaw),
+    };
+  })(),
 
   // MCP Configuration (Optional)
   MCP_ENABLED: process.env.MCP_ENABLED === 'true',
@@ -98,5 +136,7 @@ export function getEnvStatus() {
     ollamaHost: env.OLLAMA_HOST,
     ollamaModel: env.OLLAMA_MODEL,
     mcpEnabled: env.MCP_ENABLED,
+    hasGitHubApp: Boolean(env.GITHUB_AUTH_ENABLED),
+    hasEncryptionKey: Boolean(env.GITHUB_ENCRYPTION_KEY),
   };
 }

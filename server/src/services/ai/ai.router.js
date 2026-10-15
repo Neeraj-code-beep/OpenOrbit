@@ -14,6 +14,25 @@ export class AIRouter {
   }
 
   getActiveProvider() {
+    if (env.AI_PROVIDER === 'none') {
+      return {
+        name: 'none',
+        isConfigured: () => false,
+        checkHealth: async () => ({
+          provider: 'none',
+          configured: false,
+          status: 'DISABLED',
+          message: 'AI planning is explicitly disabled (AI_PROVIDER=none)',
+        }),
+        generateText: async () => {
+          throw new AppError(
+            'AI planning is explicitly disabled on this server (AI_PROVIDER=none). Set AI_PROVIDER=gemini or AI_PROVIDER=ollama in your .env file.',
+            503,
+            'AI_DISABLED'
+          );
+        },
+      };
+    }
     if (env.AI_PROVIDER === 'ollama') {
       return this.ollama;
     }
@@ -31,6 +50,7 @@ export class AIRouter {
 
     return {
       activeProvider: env.AI_PROVIDER,
+      ...(env.AI_PROVIDER === 'none' ? { status: 'DISABLED', message: 'AI planning is explicitly disabled' } : {}),
       providers: {
         gemini: geminiStatus,
         ollama: ollamaStatus,
@@ -42,12 +62,20 @@ export class AIRouter {
    * Routes prompt to the configured provider with graceful fallback if configured
    */
   async generateText(prompt) {
+    if (env.AI_PROVIDER === 'none') {
+      throw new AppError(
+        'AI planning is explicitly disabled on this server (AI_PROVIDER=none). Set AI_PROVIDER=gemini or AI_PROVIDER=ollama in your .env file.',
+        503,
+        'AI_DISABLED'
+      );
+    }
+
     const active = this.getActiveProvider();
     
     try {
       return await active.generateText(prompt);
     } catch (primaryErr) {
-      // Check if fallback to Ollama or Gemini is possible
+      // Check if fallback to Ollama or Gemini is possible (only when not explicitly disabled)
       if (env.AI_PROVIDER === 'gemini') {
         const ollamaHealth = await this.ollama.checkHealth();
         if (ollamaHealth.status === 'AVAILABLE') {
