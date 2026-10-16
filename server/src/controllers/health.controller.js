@@ -56,9 +56,12 @@ export async function getHealth(req, res) {
       },
       ai: {
         activeProvider: aiStatus.activeProvider,
+        routingStrategy: aiStatus.routingStrategy,
+        operationalStatus: aiStatus.operationalStatus,
         gemini: aiStatus.providers.gemini,
         ollama: aiStatus.providers.ollama,
       },
+
       mcp: mcpStatus,
       pythonService: pythonStatus,
       database: getDBStatus(),

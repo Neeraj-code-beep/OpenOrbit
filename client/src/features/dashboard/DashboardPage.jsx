@@ -27,7 +27,8 @@ export function DashboardPage({
         ]);
 
         if (isCurrent && savedRes.status === "fulfilled") {
-          const list = savedRes.value?.data?.savedIssues || [];
+          const raw = savedRes.value?.data;
+          const list = Array.isArray(raw) ? raw : (raw?.savedIssues || raw?.issues || []);
           setRecentSaved(list.slice(0, 3));
           setSavedStats({
             total: list.length,
@@ -38,7 +39,8 @@ export function DashboardPage({
         }
 
         if (isCurrent && recRes.status === "fulfilled") {
-          const recs = recRes.value?.data?.recommendations || [];
+          const raw = recRes.value?.data;
+          const recs = Array.isArray(raw) ? raw : (raw?.recommendations || raw?.issues || []);
           setRecommendations(recs.slice(0, 3));
         }
       } finally {
@@ -429,7 +431,7 @@ export function DashboardPage({
                 >
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <span style={{ fontSize: 11, color: "var(--accent-primary)", fontWeight: 600, display: "block" }}>
-                      {rec.repo} #{rec.number}
+                      {rec.repository?.fullName || rec.repo || "GitHub"} #{rec.number}
                     </span>
                     <strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block", marginTop: 2 }}>
                       {rec.title}
@@ -438,14 +440,15 @@ export function DashboardPage({
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      const [owner, name] = (rec.repo || "").split("/");
+                      const repoName = rec.repository?.fullName || rec.repo || "";
+                      const owner = rec.repository?.owner || (repoName.includes("/") ? repoName.split("/")[0] : "");
+                      const name = rec.repository?.name || (repoName.includes("/") ? repoName.split("/")[1] : "");
                       onSelectIssue?.({
                         number: rec.number,
                         title: rec.title,
-                        html_url: rec.html_url,
-                        repository_url: `https://api.github.com/repos/${owner}/${name}`,
-                        repoOwner: owner,
-                        repoName: name,
+                        body: rec.body,
+                        htmlUrl: rec.htmlUrl || rec.html_url,
+                        repository: { owner, name, fullName: repoName },
                       });
                       onNavigate("contribution");
                     }}

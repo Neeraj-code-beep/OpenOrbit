@@ -466,7 +466,7 @@ export function SettingsPage({
                 className="integration-card-head"
                 style={{ marginBottom: 6 }}
               >
-                <strong>Ollama (Local Service)</strong>
+                <strong>Ollama (Local Fallback)</strong>
                 <StatusBadge
                   status={providerStatus(ollama, healthConnection)}
                 />
@@ -474,6 +474,21 @@ export function SettingsPage({
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 Host: {ollama?.host ? <code>{ollama.host}</code> : "—"} · Model:{" "}
                 {ollama?.targetModel ? <code>{ollama.targetModel}</code> : "—"}
+              </span>
+            </div>
+
+            <div className="provider-box">
+              <div
+                className="integration-card-head"
+                style={{ marginBottom: 6 }}
+              >
+                <strong>Python AI Intelligence Service</strong>
+                <span className={`badge ${health?.checks?.pythonAiService?.status === "AVAILABLE" ? "badge-success" : "badge-neutral"}`}>
+                  {health?.checks?.pythonAiService?.status || "STANDBY"}
+                </span>
+              </div>
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Service URL: {health?.checks?.pythonAiService?.url ? <code>{health.checks.pythonAiService.url}</code> : <code>http://127.0.0.1:8000</code>} · Architecture & AST analysis
               </span>
             </div>
           </div>

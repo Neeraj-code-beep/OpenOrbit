@@ -4,7 +4,7 @@ import { useAuth } from "../../lib/useAuth.js";
 const CURRENT_YEAR = 2026;
 
 export function HomePage() {
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, authNotice, authError, clearAuthNotice, clearAuthError } = useAuth();
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -138,6 +138,90 @@ export function HomePage() {
           </div>
         </div>
       </header>
+
+      {/* Notice & Error Banners */}
+      {(authError || authNotice) && (
+        <div style={{ maxWidth: 960, margin: "20px auto 0", padding: "0 24px" }}>
+          {authError && (
+            <div
+              className="callout"
+              role="alert"
+              style={{
+                backgroundColor: "#FEF2F2",
+                borderColor: "#FECACA",
+                color: "#991B1B",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 18px",
+                borderRadius: "var(--radius-lg)",
+                boxShadow: "var(--shadow-sm)",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                <Icon name="alert" size={20} />
+                <span style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.5 }}>{authError}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  className="btn btn-secondary"
+                  style={{
+                    fontSize: 13,
+                    padding: "6px 14px",
+                    borderRadius: "var(--radius-full)",
+                    borderColor: "#FCA5A5",
+                    color: "#991B1B",
+                    backgroundColor: "#FFFFFF",
+                  }}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAuthError}
+                  aria-label="Dismiss error"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#991B1B", padding: 4 }}
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {authNotice && (
+            <div
+              className="callout callout-success"
+              role="status"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 18px",
+                borderRadius: "var(--radius-lg)",
+                marginTop: authError ? 10 : 0,
+                boxShadow: "var(--shadow-sm)",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Icon name="checkCircle" size={20} />
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{authNotice}</span>
+              </div>
+              <button
+                type="button"
+                onClick={clearAuthNotice}
+                aria-label="Dismiss notice"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent-primary)", padding: 4 }}
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Hero Section */}
       <section

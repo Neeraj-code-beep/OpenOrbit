@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { SavedIssue } from '../models/saved-issue.model.js';
 import { AppError } from '../utils/app-error.js';
 
@@ -108,6 +109,10 @@ export async function getSavedIssueById(req, res) {
   const { id } = req.params;
   const userId = req.user.id;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError('Saved issue not found', 404, 'NOT_FOUND');
+  }
+
   const issue = await SavedIssue.findOne({ _id: id, userId });
   if (!issue) {
     throw new AppError('Saved issue not found', 404, 'NOT_FOUND');
@@ -127,6 +132,10 @@ export async function updateSavedIssue(req, res) {
   const { id } = req.params;
   const userId = req.user.id;
   const { notes, status } = req.body || {};
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError('Saved issue not found', 404, 'NOT_FOUND');
+  }
 
   const updateFields = {};
   if (notes !== undefined) {
@@ -168,6 +177,10 @@ export async function deleteSavedIssue(req, res) {
   const { id } = req.params;
   const userId = req.user.id;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError('Saved issue not found', 404, 'NOT_FOUND');
+  }
+
   const deleted = await SavedIssue.findOneAndDelete({ _id: id, userId });
   if (!deleted) {
     throw new AppError('Saved issue not found', 404, 'NOT_FOUND');
@@ -178,3 +191,4 @@ export async function deleteSavedIssue(req, res) {
     message: 'Saved issue removed successfully',
   });
 }
+

@@ -9,7 +9,7 @@ function labelDotColor(color) {
   return /^[0-9a-fA-F]{6}$/.test(color || "") ? `#${color}` : undefined;
 }
 
-export function IssueCard({ issue, isSelected, onSelect, onOpenRepo }) {
+export function IssueCard({ issue, isSelected, onSelect, onInspect, onOpenRepo }) {
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -32,6 +32,7 @@ export function IssueCard({ issue, isSelected, onSelect, onOpenRepo }) {
           },
           labels: issue.labels?.map((l) => l.name) || [],
           state: issue.state || "open",
+          bodySnippet: (issue.body || "").slice(0, 500),
         });
         setIsSaved(true);
       }
@@ -131,20 +132,33 @@ export function IssueCard({ issue, isSelected, onSelect, onOpenRepo }) {
           )}
         </div>
 
-        <Button
-          size="sm"
-          variant={isSelected ? "secondary" : "primary"}
-          onClick={() => onSelect(issue)}
-          aria-pressed={isSelected}
-        >
-          {isSelected ? (
-            <>
-              <Icon name="check" size={14} /> Selected
-            </>
-          ) : (
-            "Analyze & plan →"
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {onInspect && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onInspect(issue)}
+              title="Inspect issue details and run Python AI analysis"
+            >
+              <Icon name="sparkle" size={13} /> Inspect & analyze
+            </Button>
           )}
-        </Button>
+
+          <Button
+            size="sm"
+            variant={isSelected ? "secondary" : "primary"}
+            onClick={() => onSelect(issue)}
+            aria-pressed={isSelected}
+          >
+            {isSelected ? (
+              <>
+                <Icon name="check" size={14} /> Selected
+              </>
+            ) : (
+              "Plan blueprint →"
+            )}
+          </Button>
+        </div>
       </div>
     </article>
   );

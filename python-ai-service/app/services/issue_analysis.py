@@ -1,10 +1,9 @@
-"""Issue analysis service interface for Member 2 implementation.
+import json
+import re
+from typing import Any, Dict, List, Optional
 
-Provides issue classification, technical focus extraction, and approach suggestions.
-"""
-
-from typing import List
 from app.schemas.analysis import IssueAnalysisRequest, IssueAnalysisResponse
+from app.services.ollama_client import generate_response
 
 
 class IssueAnalysisService:
@@ -60,3 +59,87 @@ class IssueAnalysisService:
 
 
 issue_analysis_service = IssueAnalysisService()
+
+
+async def analyze_issue(
+    title: str,
+    body: str = "",
+    repository_context: str = "",
+) -> Dict[str, Any]:
+    """Analyzes an issue description and optional repository context using Ollama, with fallback."""
+    if not title or not title.strip():
+        raise ValueError("Issue title cannot be empty")
+
+    cleaned_title = title.strip()
+    cleaned_body = (body or "").strip()
+    combined = f"{cleaned_title} {cleaned_body}".lower()
+
+    # Determine categories
+    categories = []
+    if any(w in combined for w in ["bug", "error", "fail", "crash", "fix"]):
+        categories.append("bug")
+    if any(w in combined for w in ["feat", "feature", "enhancement"]):
+        categories.append("feature")
+    if any(w in combined for w in ["doc", "docs", "documentation"]):
+        categories.append("documentation")
+    if not categories:
+        categories.append("enhancement")
+
+    # Extract referenced files and issue/PR references
+    referenced_files = re.findall(
+        r"[\w\./\-]+\.(?:py|js|ts|jsx|tsx|json|md|html|css)",
+        f"{cleaned_title} {cleaned_body}",
+    )
+    references = re.findall(r"#\d+", f"{cleaned_title} {cleaned_body}")
+
+    # Fallback heuristic analysis
+    fallback_analysis = {
+        "problem": cleaned_body or cleaned_title,
+        "likely_causes": [],
+        "suggested_steps": [
+            f"Inspect behavior described in '{cleaned_title}'.",
+            "Set up reproduction test case.",
+            "Apply targeted changes in affected module.",
+        ],
+        "testing_suggestions": [
+            "Run existing unit test suites.",
+            "Add regression test verifying the fix.",
+        ],
+        "needs_clarification": False,
+    }
+
+    ai_analysis = fallback_analysis.copy()
+
+    prompt = (
+        f"Analyze the following GitHub issue:\n"
+        f"Title: {cleaned_title}\n"
+        f"Body: {cleaned_body}\n"
+        f"Context: {repository_context}\n"
+        f"Return a JSON object with keys: problem, likely_causes, suggested_steps, testing_suggestions, needs_clarification."
+    )
+    system_prompt = "You are an expert software engineer assistant. Always respond with valid JSON."
+
+    try:
+        raw_response = await generate_response(prompt=prompt, system_prompt=system_prompt)
+        parsed = json.loads(raw_response)
+        if isinstance(parsed, dict) and "problem" in parsed:
+            ai_analysis = {
+                "problem": parsed.get("problem", fallback_analysis["problem"]),
+                "likely_causes": parsed.get("likely_causes", []),
+                "suggested_steps": parsed.get("suggested_steps", fallback_analysis["suggested_steps"]),
+                "testing_suggestions": parsed.get("testing_suggestions", fallback_analysis["testing_suggestions"]),
+                "needs_clarification": parsed.get("needs_clarification", False),
+            }
+    except Exception:
+        ai_analysis = fallback_analysis
+
+    return {
+        "title": cleaned_title,
+        "categories": categories,
+        "repository_context_available": bool(repository_context and repository_context.strip()),
+        "ai_analysis": ai_analysis,
+        "needs_clarification": ai_analysis.get("needs_clarification", False),
+        "referenced_files": sorted(list(set(referenced_files))),
+        "references": sorted(list(set(references))),
+    }
+

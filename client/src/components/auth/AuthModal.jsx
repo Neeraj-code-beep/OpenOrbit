@@ -13,6 +13,8 @@ export function AuthModal() {
     closeAuthModal,
     login,
     register,
+    authError,
+    clearAuthError,
   } = useAuth();
 
   const [name, setName] = useState("");
@@ -153,6 +155,7 @@ export function AuthModal() {
     if (submitting) return;
 
     setGeneralError("");
+    clearAuthError?.();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -242,10 +245,10 @@ export function AuthModal() {
           </button>
         </div>
 
-        {generalError && (
+        {(generalError || authError) && (
           <div className="auth-error-banner" role="alert">
             <Icon name="alert" size={16} />
-            <span>{generalError}</span>
+            <span>{generalError || authError}</span>
           </div>
         )}
 

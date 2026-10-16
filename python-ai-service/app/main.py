@@ -110,17 +110,20 @@ def create_app() -> FastAPI:
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
         logger.warning(f"HTTPException {exc.status_code}: {exc.detail}")
+        payload = ErrorResponse(
+            success=False,
+            error=ErrorInfo(
+                code="HTTP_ERROR",
+                message=str(exc.detail),
+                details=None,
+            ),
+        ).model_dump()
+        payload["detail"] = str(exc.detail)
         return JSONResponse(
             status_code=exc.status_code,
-            content=ErrorResponse(
-                success=False,
-                error=ErrorInfo(
-                    code="HTTP_ERROR",
-                    message=str(exc.detail),
-                    details=None,
-                ),
-            ).model_dump(),
+            content=payload,
         )
+
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -144,8 +147,9 @@ def create_app() -> FastAPI:
     app.include_router(analysis_router, prefix=api_prefix)
     app.include_router(contribution_router, prefix=api_prefix)
 
-    # Direct top-level health alias for orchestration probes
+    # Direct top-level health and contribution aliases for orchestration probes and legacy test suites
     app.include_router(health_router)
+    app.include_router(contribution_router)
 
     @app.get("/", tags=["Root"])
     async def root_index():

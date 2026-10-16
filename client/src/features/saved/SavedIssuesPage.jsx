@@ -30,7 +30,9 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
         params.status = statusFilter;
       }
       const res = await api.getSavedIssues(params);
-      setIssues(res?.data?.savedIssues || []);
+      const raw = res?.data;
+      const list = Array.isArray(raw) ? raw : (raw?.savedIssues || raw?.issues || []);
+      setIssues(list);
     } catch (err) {
       setError(err.message || "Failed to load saved issues.");
     } finally {
@@ -46,9 +48,9 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
     setUpdatingId(id);
     try {
       const res = await api.updateSavedIssue(id, { status: newStatus });
-      const updated = res?.data?.savedIssue;
+      const updated = res?.data?.savedIssue || res?.data;
       setIssues((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, status: updated?.status || newStatus } : item))
+        prev.map((item) => ((item.id || item._id) === id ? { ...item, status: updated?.status || newStatus } : item))
       );
     } catch (err) {
       alert(err.message || "Failed to update status.");
@@ -62,7 +64,7 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
     try {
       await api.updateSavedIssue(id, { notes: tempNotes });
       setIssues((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, notes: tempNotes } : item))
+        prev.map((item) => ((item.id || item._id) === id ? { ...item, notes: tempNotes } : item))
       );
       setEditingNotesId(null);
     } catch (err) {
@@ -77,7 +79,7 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
     setUpdatingId(id);
     try {
       await api.deleteSavedIssue(id);
-      setIssues((prev) => prev.filter((item) => item._id !== id));
+      setIssues((prev) => prev.filter((item) => (item.id || item._id) !== id));
     } catch (err) {
       alert(err.message || "Failed to delete saved issue.");
     } finally {
@@ -240,15 +242,13 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
                         {item.title}
                       </a>
                     </h3>
-                  </div>
-
-                  {/* Actions */}
+                  </div>                    {/* Actions */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <select
                       className="input"
                       value={item.status}
-                      disabled={updatingId === item._id}
-                      onChange={(e) => handleUpdateStatus(item._id, e.target.value)}
+                      disabled={updatingId === (item.id || item._id)}
+                      onChange={(e) => handleUpdateStatus(item.id || item._id, e.target.value)}
                       style={{ fontSize: 12, padding: "4px 8px", height: 32 }}
                     >
                       <option value="saved">Backlog</option>
@@ -264,10 +264,13 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
                           onSelectIssueForPlan({
                             number: item.number,
                             title: item.title,
-                            html_url: item.htmlUrl,
-                            repository_url: `https://api.github.com/repos/${item.repository?.owner}/${item.repository?.name}`,
-                            repoOwner: item.repository?.owner,
-                            repoName: item.repository?.name,
+                            body: item.bodySnippet || "",
+                            htmlUrl: item.htmlUrl,
+                            repository: item.repository || {
+                              owner: item.repository?.owner,
+                              name: item.repository?.name,
+                              fullName: item.repository?.fullName,
+                            },
                           })
                         }
                         style={{ fontSize: 12, padding: "6px 12px", height: 32 }}
@@ -279,8 +282,8 @@ export function SavedIssuesPage({ onSelectIssueForPlan, onDiscoverMore }) {
                     <button
                       type="button"
                       className="btn-icon"
-                      onClick={() => handleDelete(item._id)}
-                      disabled={updatingId === item._id}
+                      onClick={() => handleDelete(item.id || item._id)}
+                      disabled={updatingId === (item.id || item._id)}
                       aria-label="Remove saved issue"
                       style={{ color: "var(--text-muted)" }}
                     >

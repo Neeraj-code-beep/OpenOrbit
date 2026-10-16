@@ -412,6 +412,7 @@ export async function handleGitHubCallback(req, res) {
       // Redirect to destination
       const successUrl = new URL(oauthPayload.redirectTo || '/', env.CLIENT_ORIGIN);
       successUrl.searchParams.set('auth_success', isNewUser ? 'registered' : 'logged_in');
+      return res.redirect(302, successUrl.toString());
     }
   } catch (err) {
     return failRedirect(err.code || 'AUTH_PROCESSING_FAILED', err.message);

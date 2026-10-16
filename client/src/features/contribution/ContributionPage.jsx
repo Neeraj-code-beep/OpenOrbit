@@ -183,20 +183,41 @@ export function ContributionPage({
         <>
           {aiMeta && (
             <div
-              className="row-wrap"
+              className="card"
               style={{
+                padding: "12px 18px",
+                backgroundColor: "var(--bg-elevated)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-lg)",
+                display: "flex",
                 justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 10,
                 fontSize: 12,
-                color: "var(--text-muted)",
               }}
             >
-              <span>
-                Generated via provider:{" "}
-                <strong style={{ color: "var(--text-primary)" }}>
-                  {aiMeta.provider?.toUpperCase()}
-                </strong>
-              </span>
-              <span>Inference duration: {aiMeta.durationMs}ms</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span className={`badge ${aiMeta.provider?.includes("primary") ? "badge-primary" : "badge-suggested"}`}>
+                  <Icon name="sparkle" size={12} />
+                  {aiMeta.provider === "primary_cloud_gemma"
+                    ? `Primary: Cloud Gemma (${aiMeta.model || "gemma-4-26b-a4b-it"})`
+                    : `Fallback: Local Gemma (${aiMeta.model || "gemma2:2b"})`}
+                </span>
+
+                {aiMeta.pythonEnrichmentUsed && (
+                  <span className="badge badge-verified">
+                    <Icon name="check" size={12} /> Python Context Enriched
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 14, color: "var(--text-muted)", fontSize: 12 }}>
+                {aiMeta.durationMs && <span>Latency: {aiMeta.durationMs}ms</span>}
+                {aiMeta.timestamp && (
+                  <span>Synthesized: {new Date(aiMeta.timestamp).toLocaleTimeString()}</span>
+                )}
+              </div>
             </div>
           )}
           <ContributionPlan

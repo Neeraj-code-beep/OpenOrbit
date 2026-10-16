@@ -34,12 +34,12 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
 
-  // Ollama Local Model Configuration
-  OLLAMA_HOST: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434',
-  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'llama3:latest',
+  // Ollama Local Model Configuration (Local Gemma 2B Fallback)
+  OLLAMA_HOST: process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434',
+  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'gemma2:2b',
 
   // Python AI Service Configuration
-  PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL || 'http://127.0.0.1:8000',
+  PYTHON_SERVICE_URL: process.env.PYTHON_AI_SERVICE_URL || process.env.PYTHON_SERVICE_URL || 'http://127.0.0.1:8000',
 
   // Database Configuration
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/openorbit',

@@ -60,6 +60,75 @@ export class GitHubService {
   }
 
   /**
+   * Search real GitHub repositories using GitHub's Search API (/search/repositories)
+   */
+  async searchRepositories({
+    query = '',
+    language = '',
+    topic = '',
+    minStars = 0,
+    sort = 'stars',
+    order = 'desc',
+    page = 1,
+    per_page = 15,
+    token = null,
+  } = {}) {
+    const parts = [];
+
+    const trimmedQuery = (query || '').trim();
+    if (trimmedQuery) {
+      parts.push(trimmedQuery);
+    } else {
+      parts.push('stars:>50');
+    }
+
+    if (language && language.trim()) {
+      parts.push(`language:${language.trim().toLowerCase()}`);
+    }
+
+    if (topic && topic.trim()) {
+      parts.push(`topic:${topic.trim().toLowerCase()}`);
+    }
+
+    if (minStars && Number(minStars) > 0) {
+      parts.push(`stars:>=${Number(minStars)}`);
+    }
+
+    if (!trimmedQuery.includes('archived:') && !trimmedQuery.includes('fork:')) {
+      parts.push('archived:false');
+    }
+
+    const q = parts.join(' ');
+
+    const validSorts = ['stars', 'forks', 'updated'];
+    const validOrders = ['desc', 'asc'];
+    const safeSort = validSorts.includes(sort) ? sort : 'stars';
+    const safeOrder = validOrders.includes(order) ? order : 'desc';
+
+    const { data, rateLimit } = await this.client.request(
+      '/search/repositories',
+      {
+        q,
+        sort: safeSort,
+        order: safeOrder,
+        page: Math.max(1, Number(page) || 1),
+        per_page: Math.min(100, Math.max(1, Number(per_page) || 15)),
+      },
+      { token }
+    );
+
+    const repositories = (data.items || []).map(mapGitHubRepository).filter(Boolean);
+
+    return {
+      totalCount: data.total_count || 0,
+      page: Math.max(1, Number(page) || 1),
+      perPage: Math.min(100, Math.max(1, Number(per_page) || 15)),
+      rateLimit,
+      repositories,
+    };
+  }
+
+  /**
    * Fetch verified repository metadata
    */
   async getRepository(owner, repo, { token = null } = {}) {

@@ -102,6 +102,19 @@ export const api = {
     return request(`/api/github/issues?${query.toString()}`);
   },
 
+  searchRepositories: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.query) query.set('query', params.query);
+    if (params.language) query.set('language', params.language);
+    if (params.topic) query.set('topic', params.topic);
+    if (params.minStars) query.set('minStars', params.minStars);
+    if (params.sort) query.set('sort', params.sort);
+    if (params.order) query.set('order', params.order);
+    if (params.page) query.set('page', params.page);
+    if (params.per_page) query.set('per_page', params.per_page);
+    return request(`/api/github/repositories?${query.toString()}`);
+  },
+
   getRepository: (owner, repo) => request(`/api/github/repositories/${owner}/${repo}`),
   
   getIssueDetails: (owner, repo, issueNumber) =>
@@ -167,6 +180,24 @@ export const api = {
 
   generatePRDescription: (payload) =>
     request('/api/contributions/pr-description', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  analyzeIssue: (payload) =>
+    request('/api/ai/analyze-issue', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  analyzeCode: (payload) =>
+    request('/api/ai/analyze-code', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getRepositoryContext: (payload) =>
+    request('/api/ai/repository-context', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

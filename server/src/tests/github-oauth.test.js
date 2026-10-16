@@ -511,6 +511,70 @@ describe('GitHub App OAuth & Identity System', () => {
       assert.ok(location.includes('auth_error=UNAUTHORIZED'));
     });
 
+    it('GET /api/v1/auth/github/callback redirects to frontend with auth_success on successful sign-in', async (t) => {
+      const { authorizationUrl, encryptedStateCookie } = initiateGitHubOAuth({
+        intent: 'auth',
+        redirectTo: '/dashboard',
+        encryptionKey: TEST_KEY,
+      });
+      const state = new URL(authorizationUrl).searchParams.get('state');
+
+      const originalFetch = global.fetch;
+      t.after(() => { global.fetch = originalFetch; });
+
+      const mockUser = {
+        _id: '661000000000000000000001',
+        email: 'dev@example.com',
+        githubId: '998877',
+        githubUsername: 'octo-dev',
+        authProviders: ['github'],
+        save: async function () { return this; },
+        toSafeObject: () => ({ id: '661000000000000000000001', email: 'dev@example.com' }),
+      };
+      t.mock.method(User, 'findOne', async () => mockUser);
+
+      global.fetch = async (url, opts) => {
+        const urlStr = String(url);
+        if (urlStr.includes('login/oauth/access_token')) {
+          return new Response(JSON.stringify({
+            access_token: 'gho_mock_access_token_12345',
+            token_type: 'bearer',
+            scope: 'read:user,user:email',
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        if (urlStr.includes('api.github.com/user/emails')) {
+          return new Response(JSON.stringify([
+            { email: 'dev@example.com', primary: true, verified: true },
+          ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        if (urlStr.includes('api.github.com/user')) {
+          return new Response(JSON.stringify({
+            id: 998877,
+            login: 'octo-dev',
+            name: 'Octo Developer',
+            email: 'dev@example.com',
+            avatar_url: 'https://avatars.githubusercontent.com/u/998877',
+            html_url: 'https://github.com/octo-dev',
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return originalFetch(url, opts);
+      };
+
+      const res = await fetch(`${baseUrl}/github/callback?code=mock_oauth_code&state=${state}`, {
+        redirect: 'manual',
+        headers: {
+          Cookie: `openorbit_oauth_state=${encryptedStateCookie}`,
+        },
+      });
+
+      assert.equal(res.status, 302);
+      const location = res.headers.get('location');
+      assert.ok(location, 'Expected redirect location header');
+      assert.ok(location.includes('auth_success=logged_in'), `Expected auth_success=logged_in in ${location}`);
+      const setCookie = res.headers.get('set-cookie');
+      assert.ok(setCookie && setCookie.includes(env.COOKIE_NAME), 'Expected session cookie to be set');
+    });
+
     it('authenticateWithGitHub and linkGitHubAccount throw CRYPTO_KEY_MISSING when key is empty', async () => {
       await assert.rejects(
         async () => {

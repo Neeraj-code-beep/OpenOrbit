@@ -10,6 +10,7 @@ import {
 import {
   validateRepoParams,
   validateIssueSearchQuery,
+  validateRepoSearchQuery,
   validateUsernameParam,
   validatePullRequestQuery,
 } from '../validators/github.validator.js';
@@ -139,5 +140,16 @@ describe('GitHub Mapper & Validators', () => {
     assert.deepEqual(validatePullRequestQuery({ state: 'open', page: '1', per_page: '10' }), []);
     const invalid = validatePullRequestQuery({ state: 'invalid-state', page: '0', per_page: '500' });
     assert.equal(invalid.length, 3);
+  });
+
+  it('validates repository search query parameters', () => {
+    assert.deepEqual(validateRepoSearchQuery({ query: 'react', sort: 'stars', order: 'desc', page: '1', per_page: '15' }), []);
+    const invalid = validateRepoSearchQuery({
+      sort: 'invalid_sort',
+      order: 'invalid_order',
+      page: '0',
+      per_page: '200',
+    });
+    assert.equal(invalid.length, 4);
   });
 });

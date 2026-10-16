@@ -91,8 +91,17 @@ export function AuthProvider({ children }) {
     // 1. Process OAuth error if present
     const { successType, errorCode, errorMessage, githubLinked } = oauthParams || {};
     if (errorCode) {
-      const fullError = errorMessage ? `${errorCode}: ${errorMessage}` : errorCode;
-      setAuthError(`GitHub authentication failed (${fullError})`);
+      if (errorCode === 'ACCOUNT_EXISTS_REQUIRES_LINK') {
+        setAuthError(
+          errorMessage ||
+          'An OpenOrbit account already exists with this email address. Please log in with your password and connect your GitHub account from Settings.'
+        );
+        setIsAuthModalOpen(true);
+        setAuthModalMode('login');
+      } else {
+        const fullError = errorMessage ? `${errorCode}: ${errorMessage}` : errorCode;
+        setAuthError(`GitHub authentication failed (${fullError})`);
+      }
     }
 
     // 2. Fetch or reuse startup session verification promise

@@ -25,11 +25,14 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ]
 
     # Ollama / Local Model Settings
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
-    DEFAULT_LOCAL_MODEL: str = "llama3:latest"
+    DEFAULT_LOCAL_MODEL: str = "gemma2:2b"
+    OLLAMA_TIMEOUT: float = 30.0
 
     # Context Processing Limits
     MAX_CONTEXT_FILE_SIZE_KB: int = 256
@@ -41,8 +44,26 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # Convenience accessors for lowercase attribute conventions
+    @property
+    def ollama_base_url(self) -> str:
+        return self.OLLAMA_BASE_URL
+
+    @property
+    def ollama_model(self) -> str:
+        return self.DEFAULT_LOCAL_MODEL
+
+    @property
+    def ollama_timeout(self) -> float:
+        return self.OLLAMA_TIMEOUT
+
 
 @lru_cache()
 def get_settings() -> Settings:
     """Returns cached application settings instance."""
     return Settings()
+
+
+# Export module-level settings instance for convenience
+settings: Settings = get_settings()
+

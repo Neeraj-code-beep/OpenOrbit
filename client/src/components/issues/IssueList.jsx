@@ -9,6 +9,7 @@ export function IssueList({
   error,
   selectedIssue,
   onSelectIssue,
+  onInspectIssue,
   onOpenRepo,
   onRetry,
 }) {
@@ -52,6 +53,7 @@ export function IssueList({
           issue={issue}
           isSelected={selectedIssue?.id === issue.id}
           onSelect={onSelectIssue}
+          onInspect={onInspectIssue}
           onOpenRepo={onOpenRepo}
         />
       ))}

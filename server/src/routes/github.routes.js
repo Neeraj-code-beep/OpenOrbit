@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   searchIssues,
+  searchRepositories,
   getRepository,
   getIssueDetails,
   getPullRequests,
@@ -11,6 +12,7 @@ import {
 import { validate } from '../middleware/validate.middleware.js';
 import {
   validateIssueSearchQuery,
+  validateRepoSearchQuery,
   validateRepoParams,
   validateIssueNumberParams,
   validateUsernameParam,
@@ -27,6 +29,14 @@ router.get(
   optionalAuth,
   validate(validateIssueSearchQuery, 'query'),
   asyncHandler(searchIssues)
+);
+
+// GET /api/github/repositories - Search repositories
+router.get(
+  '/repositories',
+  optionalAuth,
+  validate(validateRepoSearchQuery, 'query'),
+  asyncHandler(searchRepositories)
 );
 
 // GET /api/github/repositories/:owner/:repo - Repository details

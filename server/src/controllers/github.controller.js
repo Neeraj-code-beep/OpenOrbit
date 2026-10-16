@@ -31,6 +31,37 @@ export async function searchIssues(req, res) {
 }
 
 /**
+ * Searches real GitHub repositories
+ */
+export async function searchRepositories(req, res) {
+  const { query, language, topic, minStars, sort, order, page, per_page } = req.query;
+  const token = req.user?.id ? await getUserGitHubToken(req.user.id) : null;
+
+  const result = await githubService.searchRepositories({
+    query,
+    language,
+    topic,
+    minStars: minStars ? Number(minStars) : 0,
+    sort,
+    order,
+    page: page ? Number(page) : 1,
+    per_page: per_page ? Number(per_page) : 15,
+    token,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: result.repositories,
+    pagination: {
+      totalCount: result.totalCount,
+      page: result.page,
+      perPage: result.perPage,
+    },
+    rateLimit: result.rateLimit,
+  });
+}
+
+/**
  * Fetches repository metadata and README
  */
 export async function getRepository(req, res) {

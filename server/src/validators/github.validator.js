@@ -78,3 +78,28 @@ export function validatePullRequestQuery(query) {
   }
   return errors;
 }
+
+/**
+ * Validates repository search query parameters
+ */
+export function validateRepoSearchQuery(query) {
+  const errors = [];
+  if (!query) return errors;
+
+  if (query.query && typeof query.query === 'string' && query.query.length > 256) {
+    errors.push('query must not exceed 256 characters');
+  }
+  if (query.sort && !['stars', 'forks', 'updated'].includes(query.sort)) {
+    errors.push("sort must be one of 'stars', 'forks', or 'updated'");
+  }
+  if (query.order && !['asc', 'desc'].includes(query.order)) {
+    errors.push("order must be 'asc' or 'desc'");
+  }
+  if (query.page && (isNaN(Number(query.page)) || Number(query.page) < 1)) {
+    errors.push('page must be a positive integer');
+  }
+  if (query.per_page && (isNaN(Number(query.per_page)) || Number(query.per_page) < 1 || Number(query.per_page) > 100)) {
+    errors.push('per_page must be an integer between 1 and 100');
+  }
+  return errors;
+}

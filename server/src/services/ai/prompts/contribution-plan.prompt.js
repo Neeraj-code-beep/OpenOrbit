@@ -2,7 +2,14 @@
  * Constructs a secure, bounded prompt for generating an open-source contribution plan.
  * All issue text and repository context are enclosed in XML delimiters to prevent prompt injection.
  */
-export function buildContributionPlanPrompt({ issueTitle, issueBody, repoName, repoReadme = '', verifiedFiles = [] }) {
+export function buildContributionPlanPrompt({
+  issueTitle,
+  issueBody,
+  repoName,
+  repoReadme = '',
+  verifiedFiles = [],
+  pythonArchitectureOverview = '',
+}) {
   const verifiedListStr = verifiedFiles.length > 0 ? verifiedFiles.join(', ') : 'None explicitly verified yet';
 
   return `You are OpenOrbit, an expert open-source contribution architect.
@@ -24,7 +31,11 @@ ${escapeXml(issueBody || 'No description provided.')}
 <repository_readme_snippet>
 ${escapeXml(repoReadme ? repoReadme.slice(0, 3000) : 'No README provided.')}
 </repository_readme_snippet>
+<repository_architecture_analysis>
+${escapeXml(pythonArchitectureOverview ? pythonArchitectureOverview.slice(0, 3000) : 'No architectural overview provided.')}
+</repository_architecture_analysis>
 </untrusted_content>
+
 
 REQUIRED JSON SCHEMA:
 {

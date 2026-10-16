@@ -52,7 +52,7 @@ export function AIAssistantPage({ onNavigateToPlan }) {
     setIsProcessing(true);
 
     try {
-      // If prompt requests PR description, call real backend PR description generator
+      // 1. If prompt mentions PR description, call real backend PR description generator
       if (textToSend.toLowerCase().includes("pr") || textToSend.toLowerCase().includes("pull request")) {
         try {
           const res = await api.generatePRDescription({
@@ -78,14 +78,40 @@ export function AIAssistantPage({ onNavigateToPlan }) {
             },
           ]);
           return;
-        } catch {
-          // fallback to helpful structured response
+        } catch (err) {
+          console.warn("PR generation fallback:", err.message);
         }
       }
 
-      // Default structured assistant advice
+      // 2. If prompt mentions issue analysis, call real backend Python issue analyzer
+      if (textToSend.toLowerCase().includes("issue") || textToSend.toLowerCase().includes("bug") || textToSend.toLowerCase().includes("problem")) {
+        try {
+          const res = await api.analyzeIssue({
+            issueTitle: textToSend,
+            issueBody: "User requested automated analysis via AI Contribution Assistant.",
+          });
+          const analysis = res?.data || res;
+          if (analysis?.problem_statement) {
+            const content = `### Python Issue Analysis Result\n\n**Category:** ${analysis.issue_category || "General"} | **Difficulty:** ${analysis.difficulty_estimate || "Intermediate"}\n\n**Problem Statement:**\n${analysis.problem_statement}\n\n**Recommended Approach:**\n${analysis.recommended_approach || "Review affected modules and apply isolated patch."}${analysis.suspected_components?.length ? `\n\n**Suspected Components:** ${analysis.suspected_components.join(", ")}` : ""}`;
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: String(Date.now() + 1),
+                role: "assistant",
+                content,
+                timestamp: "Just now",
+              },
+            ]);
+            return;
+          }
+        } catch (err) {
+          console.warn("Issue analysis fallback:", err.message);
+        }
+      }
+
+      // 3. Default structured developer guidance
       let reply = "";
-      if (textToSend.toLowerCase().includes("first") || textToSend.toLowerCase().includes("prerequisite")) {
+      if (textToSend.toLowerCase().includes("first") || textToSend.toLowerCase().includes("prerequisite") || textToSend.toLowerCase().includes("checklist")) {
         reply = `### Recommended Contribution Checklist\n\n1. **Fork & Branch:** Always create a descriptive branch like \`fix/event-teardown\` off the latest \`main\`.\n2. **Isolate Changes:** Make only the edits required to solve the target issue; avoid reformatting unrelated code.\n3. **Run Existing Tests:** Run \`npm test\` or the repository's test runner before making modifications to ensure baseline health.\n4. **Add Regression Tests:** Write tests verifying your bug fix or feature works as expected.\n5. **Documentation:** Preserve comments and docstrings. Update README if options or behaviors change.\n\nYou can use OpenOrbit's **Contribution Planner** to generate a structured implementation blueprint tailored to your specific issue.`;
       } else if (textToSend.toLowerCase().includes("architecture") || textToSend.toLowerCase().includes("inspect")) {
         reply = `### How to Inspect Unfamiliar Repositories\n\n1. **Read the Entry Points:** Check \`package.json\` (\`main\` or \`scripts\`) to locate the server or app entry file.\n2. **Follow Route Declarations:** Modern backends structure logic by routes -> controllers -> services -> models.\n3. **Inspect Test Fixtures:** Test files (e.g. \`*.test.js\` or \`tests/\`) reveal how APIs are expected to be called.\n4. **Token-Budgeted Context:** OpenOrbit's repository explorer extracts key snippets while ignoring noisy directories like \`node_modules\` and build artifacts.`;

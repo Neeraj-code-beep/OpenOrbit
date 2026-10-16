@@ -4,43 +4,17 @@ import { ollamaProvider } from './providers/ollama.provider.js';
 import { AppError } from '../../utils/app-error.js';
 
 export class AIRouter {
-  constructor() {
-    this.gemini = geminiProvider;
-    this.ollama = ollamaProvider;
+  constructor(gemini = geminiProvider, ollama = ollamaProvider) {
+    this.gemini = gemini;
+    this.ollama = ollama;
   }
 
   getActiveProviderName() {
     return env.AI_PROVIDER;
   }
 
-  getActiveProvider() {
-    if (env.AI_PROVIDER === 'none') {
-      return {
-        name: 'none',
-        isConfigured: () => false,
-        checkHealth: async () => ({
-          provider: 'none',
-          configured: false,
-          status: 'DISABLED',
-          message: 'AI planning is explicitly disabled (AI_PROVIDER=none)',
-        }),
-        generateText: async () => {
-          throw new AppError(
-            'AI planning is explicitly disabled on this server (AI_PROVIDER=none). Set AI_PROVIDER=gemini or AI_PROVIDER=ollama in your .env file.',
-            503,
-            'AI_DISABLED'
-          );
-        },
-      };
-    }
-    if (env.AI_PROVIDER === 'ollama') {
-      return this.ollama;
-    }
-    return this.gemini;
-  }
-
   /**
-   * Health status of all AI providers
+   * Health status of all AI providers with honest connectivity & model checks
    */
   async checkAllProviders() {
     const [geminiStatus, ollamaStatus] = await Promise.all([
@@ -48,9 +22,25 @@ export class AIRouter {
       this.ollama.checkHealth(),
     ]);
 
+    const activeProvider = env.AI_PROVIDER;
+    const isCloudPrimary = activeProvider === 'gemini';
+    const isCloudAvailable = geminiStatus.status === 'AVAILABLE';
+    const isLocalAvailable = ollamaStatus.status === 'AVAILABLE';
+
+    let routingStrategy = 'cloud-first (primary: Cloud Gemma, fallback: Local Gemma 2B via Ollama)';
+    if (activeProvider === 'none') {
+      routingStrategy = 'disabled (AI_PROVIDER=none)';
+    } else if (activeProvider === 'ollama') {
+      routingStrategy = 'local-only (forced via AI_PROVIDER=ollama)';
+    }
+
     return {
-      activeProvider: env.AI_PROVIDER,
-      ...(env.AI_PROVIDER === 'none' ? { status: 'DISABLED', message: 'AI planning is explicitly disabled' } : {}),
+      activeProvider,
+      routingStrategy,
+      cloudPrimary: isCloudPrimary,
+      operationalStatus: (isCloudPrimary && isCloudAvailable)
+        ? 'PRIMARY_ONLINE'
+        : (isLocalAvailable ? 'FALLBACK_ONLINE' : 'ALL_OFFLINE'),
       providers: {
         gemini: geminiStatus,
         ollama: ollamaStatus,
@@ -59,37 +49,88 @@ export class AIRouter {
   }
 
   /**
-   * Routes prompt to the configured provider with graceful fallback if configured
+   * Routes prompt with strict cloud-first priority, falling back to local Gemma 2B on eligible failure
    */
-  async generateText(prompt) {
+  async generateTextWithProvenance(prompt, options = {}) {
     if (env.AI_PROVIDER === 'none') {
       throw new AppError(
-        'AI planning is explicitly disabled on this server (AI_PROVIDER=none). Set AI_PROVIDER=gemini or AI_PROVIDER=ollama in your .env file.',
+        'AI planning is explicitly disabled on this server (AI_PROVIDER=none). Set AI_PROVIDER=gemini or configure local Ollama.',
         503,
         'AI_DISABLED'
       );
     }
 
-    const active = this.getActiveProvider();
-    
-    try {
-      return await active.generateText(prompt);
-    } catch (primaryErr) {
-      // Check if fallback to Ollama or Gemini is possible (only when not explicitly disabled)
-      if (env.AI_PROVIDER === 'gemini') {
-        const ollamaHealth = await this.ollama.checkHealth();
-        if (ollamaHealth.status === 'AVAILABLE') {
-          console.warn('[AI_ROUTER] Gemini failed; falling back to local Ollama:', primaryErr.message);
-          return await this.ollama.generateText(prompt);
-        }
-      } else if (env.AI_PROVIDER === 'ollama' && this.gemini.isConfigured()) {
-        console.warn('[AI_ROUTER] Ollama failed; falling back to Gemini:', primaryErr.message);
-        return await this.gemini.generateText(prompt);
-      }
-      // If no fallback is available, throw the primary error
-      throw primaryErr;
+    // If explicitly forced to ollama-only mode via configuration
+    if (env.AI_PROVIDER === 'ollama') {
+      const text = await this.ollama.generateText(prompt, options);
+      return {
+        text,
+        provider: 'ollama',
+        model: this.ollama.getModelName ? this.ollama.getModelName() : this.ollama.modelName,
+        fallbackUsed: false,
+      };
     }
+
+    // Default & Master policy: CLOUD FIRST (Primary Cloud Gemma -> Local Gemma 2B fallback)
+    let primaryError = null;
+
+    if (this.gemini.isConfigured()) {
+      try {
+        const text = await this.gemini.generateText(prompt, options);
+        return {
+          text,
+          provider: 'gemini',
+          model: this.gemini.getModelName ? this.gemini.getModelName() : this.gemini.modelName,
+          fallbackUsed: false,
+        };
+      } catch (err) {
+        primaryError = err;
+        console.warn(`[AI_ROUTER] Primary Cloud Gemma failed (${err.code || 'ERROR'}: ${err.message}). Attempting fallback to local Gemma 2B (Ollama)...`);
+      }
+    } else {
+      primaryError = new AppError('Gemini API key is not configured in environment', 503, 'AI_PROVIDER_UNCONFIGURED');
+      console.warn(`[AI_ROUTER] Cloud Gemma is not configured. Attempting fallback to local Gemma 2B (Ollama)...`);
+    }
+
+    // Attempt local Gemma 2B fallback through Ollama
+    try {
+      const text = await this.ollama.generateText(prompt, options);
+      return {
+        text,
+        provider: 'ollama',
+        model: this.ollama.getModelName ? this.ollama.getModelName() : this.ollama.modelName,
+        fallbackUsed: true,
+        fallbackReason: primaryError.message,
+        primaryErrorCode: primaryError.code,
+      };
+    } catch (fallbackErr) {
+      console.error(`[AI_ROUTER] Local Gemma 2B fallback also failed (${fallbackErr.code || 'ERROR'}: ${fallbackErr.message})`);
+      
+      const cloudModel = this.gemini.getModelName ? this.gemini.getModelName() : this.gemini.modelName;
+      const localModel = this.ollama.getModelName ? this.ollama.getModelName() : this.ollama.modelName;
+
+      throw new AppError(
+        `All AI providers failed. Primary Cloud Gemma (${cloudModel}): ${primaryError.message}. Fallback Local Gemma (${localModel}): ${fallbackErr.message}.`,
+        502,
+        'AI_ALL_PROVIDERS_FAILED',
+        {
+          cloudError: primaryError.message,
+          cloudErrorCode: primaryError.code,
+          localError: fallbackErr.message,
+          localErrorCode: fallbackErr.code,
+        }
+      );
+    }
+  }
+
+  /**
+   * Convenience backwards-compatible method returning only the generated text
+   */
+  async generateText(prompt, options = {}) {
+    const result = await this.generateTextWithProvenance(prompt, options);
+    return result.text;
   }
 }
 
 export const aiRouter = new AIRouter();
+
