@@ -1,60 +1,67 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces */
-  --bg-primary: #f5f7fa; /* app canvas */
-  --bg-secondary: #ffffff; /* sidebar, panels */
-  --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --bg-elevated: #f1f5f9; /* inset rows, code blocks */
-  --bg-input: #ffffff;
+  /* Surfaces (Warm Ivory & Off-White Palette) */
+  --bg-primary: #F7F5F0; /* Warm ivory canvas */
+  --bg-secondary: #FFFFFF; /* Panels & modular cards */
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAF8F4;
+  --bg-card-forest: #223326; /* Dark forest green modular card (FlowGrid inspired) */
+  --bg-card-sage: #E8EDE4; /* Soft sage accent surface */
+  --bg-elevated: #F1ECE3; /* Inset rows, code blocks */
+  --bg-input: #FFFFFF;
 
   /* Borders & Dividers */
-  --border-subtle: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-focus: #2563eb;
+  --border-subtle: #E8E3DA;
+  --border-medium: #D8D2C5;
+  --border-focus: #2D4030; /* Forest green focus ring */
 
-  /* Accent (blue) */
-  --accent-primary: #2563eb;
-  --accent-primary-hover: #1d4ed8;
-  --accent-solid: #2563eb; /* fill behind white text */
-  --accent-solid-hover: #1d4ed8;
-  --accent-subtle: #eff6ff;
-  --accent-subtle-border: #bfdbfe;
-  --accent-glow: rgba(37, 99, 235, 0.18);
+  /* Primary Brand Accent (Forest Green / Olive / Sage - NO BLUE, NO PURPLE) */
+  --accent-primary: #2D4030; /* Refined deep forest green */
+  --accent-primary-hover: #1E2D21;
+  --accent-solid: #2D4030;
+  --accent-solid-hover: #1E2D21;
+  --accent-subtle: #EBF0E8;
+  --accent-subtle-border: #CCD8C8;
+  --accent-glow: rgba(45, 64, 48, 0.16);
 
-  /* Legacy accent names, mapped to the semantic palette */
-  --accent-cyan: #0369a1;
-  --accent-emerald: #16a34a;
-  --accent-amber: #d97706;
-  --accent-rose: #dc2626;
-  --accent-purple: #2563eb;
+  /* Semantic Palettes (Restrained Olive, Sage, Amber, Coral) */
+  --accent-forest: #243527;
+  --accent-sage: #6B826E;
+  --accent-olive: #4F5E46;
+  --accent-lime: #7D9467;
+  --accent-cyan: #4A6B5B;
+  --accent-emerald: #2E5A36;
+  --accent-amber: #B4691E;
+  --accent-rose: #C24136;
+  --accent-purple: #3A4F39; /* Mapped to deep sage/olive */
 
-  /* Text */
-  --text-primary: #1f2937;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-link: #2563eb;
-  --text-on-accent: #ffffff;
+  /* Text (Charcoal & Warm Muted) */
+  --text-primary: #1C1D1A; /* Crisp deep charcoal */
+  --text-secondary: #4A4D46; /* Charcoal medium */
+  --text-muted: #74786E; /* Warm neutral muted */
+  --text-link: #2D4030; /* Forest green link */
+  --text-on-accent: #FFFFFF;
+  --text-on-dark: #F5F7F3;
 
-  /* Status colors: dark text on a light tint (>= 4.5:1) */
-  --status-success: #15803d;
-  --status-success-bg: #f0fdf4;
-  --status-success-border: #bbf7d0;
-  --status-warning: #b45309;
-  --status-warning-bg: #fffbeb;
-  --status-warning-border: #fde68a;
-  --status-danger: #b91c1c;
-  --status-danger-bg: #fef2f2;
-  --status-danger-border: #fecaca;
-  --status-info: #1d4ed8;
-  --status-info-bg: #eff6ff;
-  --status-info-border: #bfdbfe;
-  --status-neutral: #64748b;
-  --status-dot-success: #16a34a;
-  --status-dot-warning: #d97706;
-  --status-dot-danger: #dc2626;
-  --status-dot-info: #2563eb;
+  /* Status Colors (Muted Forest, Amber, Coral, Sage - NO BLUE) */
+  --status-success: #2E5A36;
+  --status-success-bg: #EBF3EC;
+  --status-success-border: #B7D7BC;
+  --status-warning: #945B18;
+  --status-warning-bg: #FDF6E9;
+  --status-warning-border: #F3DCAC;
+  --status-danger: #A83226;
+  --status-danger-bg: #FDF0EE;
+  --status-danger-border: #F5CAC5;
+  --status-info: #3D5A45; /* Deep sage instead of blue */
+  --status-info-bg: #EDF3EE;
+  --status-info-border: #C8DCD0;
+  --status-neutral: #6B7066;
+  --status-dot-success: #366B40;
+  --status-dot-warning: #B4691E;
+  --status-dot-danger: #C24136;
+  --status-dot-info: #486E53;
 
   /* Typography */
   --font-sans:
@@ -72,27 +79,28 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Radii (Modern FlowGrid curves) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
   --radius-full: 9999px;
 
-  /* Shadows (restrained) */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 2px 8px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);
-  --shadow-glow: 0 2px 10px rgba(37, 99, 235, 0.15);
-  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px var(--border-focus);
+  /* Shadows (Refined warm shadows) */
+  --shadow-sm: 0 1px 3px rgba(32, 35, 30, 0.04);
+  --shadow-md: 0 4px 12px rgba(32, 35, 30, 0.06);
+  --shadow-lg: 0 12px 32px rgba(32, 35, 30, 0.08);
+  --shadow-glow: 0 4px 16px rgba(45, 64, 48, 0.12);
+  --focus-ring: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--border-focus);
 
   /* Control heights */
-  --control-sm: 30px;
-  --control-md: 36px;
-  --control-lg: 42px;
+  --control-sm: 32px;
+  --control-md: 38px;
+  --control-lg: 44px;
 
   /* Layout */
-  --sidebar-width: 248px;
-  --content-max-width: 1280px;
+  --sidebar-width: 260px;
+  --content-max-width: 1360px;
 
   /* Transitions */
   --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);

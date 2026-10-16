@@ -9,6 +9,7 @@ export function Input({
   type = "text",
   className = "",
   id,
+  ref,
   ...props
 }) {
   const generatedId = useId();
@@ -23,6 +24,7 @@ export function Input({
         </label>
       )}
       <input
+        ref={ref}
         id={inputId}
         type={type}
         value={value}

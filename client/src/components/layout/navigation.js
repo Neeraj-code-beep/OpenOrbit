@@ -1,17 +1,21 @@
-// Single source of truth for the app's top-level screens.
+// Single source of truth for the app's top-level workspace screens.
 export const NAV_GROUPS = [
   {
-    label: 'Menu',
+    label: 'Workspace',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { id: 'dashboard', label: 'Overview', icon: 'dashboard' },
       { id: 'issues', label: 'Discover Issues', icon: 'issues' },
-      { id: 'repository', label: 'Repository View', icon: 'repository' },
-      { id: 'contribution', label: 'Contribution Plan', icon: 'contribution' },
+      { id: 'saved', label: 'Saved Issues', icon: 'bookmark' },
+      { id: 'repository', label: 'Repositories', icon: 'repository' },
+      { id: 'contribution', label: 'Contribution Planner', icon: 'contribution' },
+      { id: 'assistant', label: 'AI Assistant', icon: 'bot' },
     ],
   },
   {
-    label: 'General',
-    items: [{ id: 'settings', label: 'Settings & Status', icon: 'settings' }],
+    label: 'Account & System',
+    items: [
+      { id: 'settings', label: 'Settings', icon: 'settings' },
+    ],
   },
 ];
 

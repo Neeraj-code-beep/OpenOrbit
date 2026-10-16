@@ -319,17 +319,144 @@ describe('Authentication & JWT System', () => {
     });
   });
 
-  describe('User Model & Bcrypt Unit Tests', () => {
-    it('hashes passwords and compares hashes correctly', async () => {
-      const password = 'TestSecurePassword123!';
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(password, salt);
+  describe('DELETE /api/v1/auth/github (Account Unlinking)', () => {
+    it('rejects unauthenticated requests with 401 UNAUTHORIZED', async () => {
+      const res = await fetch(`${baseUrl}/github`, {
+        method: 'DELETE',
+      });
+      assert.equal(res.status, 401);
+      const json = await res.json();
+      assert.equal(json.error.code, 'UNAUTHORIZED');
+    });
 
-      const isMatch = await bcrypt.compare(password, hash);
+    it('rejects disconnect when no GitHub account is linked (400 NO_GITHUB_LINKED)', async (t) => {
+      const mockUser = createMockUserDoc({ githubId: null });
+      t.mock.method(User, 'findById', () => ({
+        select: async () => mockUser,
+      }));
+
+      const sessionToken = jwt.sign(
+        { sub: mockUser._id, email: mockUser.email },
+        env.JWT_SECRET,
+        { algorithm: env.JWT_ALGORITHM, expiresIn: '1h' }
+      );
+
+      const res = await fetch(`${baseUrl}/github`, {
+        method: 'DELETE',
+        headers: { Cookie: `${env.COOKIE_NAME}=${sessionToken}` },
+      });
+
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.error.code, 'NO_GITHUB_LINKED');
+    });
+
+    it('rejects disconnect when user has no password (prevents account lockout)', async (t) => {
+      const mockUser = createMockUserDoc({
+        githubId: 'gh_12345',
+        password: null,
+        authProviders: ['github'],
+      });
+      t.mock.method(User, 'findById', () => ({
+        select: async () => mockUser,
+      }));
+
+      const sessionToken = jwt.sign(
+        { sub: mockUser._id, email: mockUser.email },
+        env.JWT_SECRET,
+        { algorithm: env.JWT_ALGORITHM, expiresIn: '1h' }
+      );
+
+      const res = await fetch(`${baseUrl}/github`, {
+        method: 'DELETE',
+        headers: { Cookie: `${env.COOKIE_NAME}=${sessionToken}` },
+      });
+
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.error.code, 'CANNOT_DISCONNECT_ONLY_AUTH_METHOD');
+    });
+
+    it('successfully unlinks GitHub when local password exists', async (t) => {
+      let saved = false;
+      const mockUser = createMockUserDoc({
+        githubId: 'gh_12345',
+        githubUsername: 'octocat',
+        password: '$2a$10$hashedpasswordhere',
+        authProviders: ['local', 'github'],
+        save: async function () {
+          saved = true;
+          return this;
+        },
+      });
+      t.mock.method(User, 'findById', () => ({
+        select: async () => mockUser,
+      }));
+
+      const sessionToken = jwt.sign(
+        { sub: mockUser._id, email: mockUser.email },
+        env.JWT_SECRET,
+        { algorithm: env.JWT_ALGORITHM, expiresIn: '1h' }
+      );
+
+      const res = await fetch(`${baseUrl}/github`, {
+        method: 'DELETE',
+        headers: { Cookie: `${env.COOKIE_NAME}=${sessionToken}` },
+      });
+
+      assert.equal(res.status, 200);
+      const json = await res.json();
+      assert.equal(json.success, true);
+      assert.equal(json.message, 'GitHub account disconnected successfully');
+      assert.equal(mockUser.githubId, undefined);
+      assert.equal(mockUser.githubUsername, undefined);
+      assert.deepEqual(mockUser.authProviders, ['local']);
+      assert.equal(saved, true);
+    });
+  });
+
+  describe('User Model & Bcrypt Unit Tests', () => {
+    it('executes pre("save") hook without error and hashes plaintext password', async () => {
+      const user = new User({
+        name: 'Grace Hopper',
+        email: 'grace@example.com',
+        password: 'PlaintextPassword123!',
+      });
+
+      assert.equal(user.password, 'PlaintextPassword123!');
+
+      // Execute the registered pre('save') hooks directly on the user instance
+      await User.schema.s.hooks.execPre('save', user, []);
+
+      assert.notEqual(user.password, 'PlaintextPassword123!');
+      assert.ok(user.password.startsWith('$2a$') || user.password.startsWith('$2b$'));
+
+      // Verify comparePassword on the instance
+      const isMatch = await user.comparePassword('PlaintextPassword123!');
       assert.equal(isMatch, true);
 
-      const isMismatch = await bcrypt.compare('WrongPassword999!', hash);
+      const isMismatch = await user.comparePassword('IncorrectPassword!');
       assert.equal(isMismatch, false);
+    });
+
+    it('does not re-hash password on subsequent save if password was not modified', async () => {
+      const user = new User({
+        name: 'Grace Hopper',
+        email: 'grace@example.com',
+        password: 'PlaintextPassword123!',
+      });
+
+      await User.schema.s.hooks.execPre('save', user, []);
+
+      const firstHash = user.password;
+
+      // Simulate saved state where password is not modified
+      user.isModified = (field) => field !== 'password';
+      user.name = 'Admiral Grace Hopper';
+
+      await User.schema.s.hooks.execPre('save', user, []);
+
+      assert.equal(user.password, firstHash);
     });
 
     it('toSafeObject returns sanitized properties', () => {

@@ -32,6 +32,7 @@ router.post('/reauth', requireAuth, reauthRateLimiter, asyncHandler(authControll
  */
 router.get('/github', oauthStartRateLimiter, asyncHandler(authController.initiateGitHubAuth));
 router.get('/github/callback', asyncHandler(authController.handleGitHubCallback));
+router.delete('/github', requireAuth, asyncHandler(authController.unlinkGitHub));
 
 /**
  * Logout Endpoint

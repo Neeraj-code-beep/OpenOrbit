@@ -1,19 +1,7 @@
-import {
-  activeProviderEntry,
-  githubRate,
-  overallStatus,
-} from "../../utils/status.js";
+import { overallStatus } from "../../utils/status.js";
 import { Icon } from "../common/Icon.jsx";
 import { NAV_GROUPS } from "./navigation.js";
-
-const TONE_TEXT = {
-  success: "success",
-  warning: "warning",
-  danger: "danger",
-  info: "info",
-  neutral: "neutral",
-  unconfigured: "warning",
-};
+import { useAuth } from "../../lib/useAuth.js";
 
 export function Sidebar({
   currentTab,
@@ -21,23 +9,27 @@ export function Sidebar({
   health,
   healthConnection = "ready",
 }) {
-  const ai = health?.checks?.ai;
-  const provider = activeProviderEntry(ai);
-  const rate = githubRate(health?.checks?.github);
+  const { user } = useAuth();
   const status = overallStatus(health, healthConnection);
-  const tone = TONE_TEXT[status.tone] || "neutral";
-  const hasData = healthConnection === "ready" && health;
+  const isHealthy = status.tone === "success" || status.tone === "info" || healthConnection === "ready";
 
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <img
-          className="sidebar-logo"
-          src="/favicon.svg"
-          alt=""
-          width="32"
-          height="32"
-        />
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "var(--radius-sm)",
+            backgroundColor: "var(--accent-primary)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#FFFFFF",
+          }}
+        >
+          <Icon name="sparkle" size={18} />
+        </div>
         <div>
           <p className="sidebar-title">OpenOrbit</p>
           <span className="sidebar-tagline">Contribution Assistant</span>
@@ -64,44 +56,56 @@ export function Sidebar({
         ))}
       </nav>
 
-      <section className="sidebar-status" aria-label="System status">
+      {/* User Session & System Health Widget */}
+      <section className="sidebar-status" aria-label="Account and system status">
         <div className="sidebar-status-head">
           <span className="sidebar-status-title">System Status</span>
-          <span
-            className={`sidebar-status-state status-text-${tone}`}
-            role="status"
-          >
+          <span className="sidebar-status-state" style={{ color: "var(--status-success)" }}>
             <span
-              className={`status-dot${tone === "neutral" ? "" : ` is-${tone}`}${status.tone === "info" ? " pulsing" : ""}`}
+              className={`status-dot ${isHealthy ? "is-success" : "is-warning"}`}
               aria-hidden="true"
             />
-            {status.label}
+            {isHealthy ? "Operational" : status.label}
           </span>
         </div>
-        <dl className="sidebar-status-rows">
-          <div className="sidebar-status-row">
-            <dt>Provider</dt>
-            <dd>{hasData ? ai?.activeProvider || "Unknown" : "—"}</dd>
+
+        {user && (
+          <div
+            style={{
+              marginTop: 10,
+              paddingTop: 10,
+              borderTop: "1px solid var(--border-subtle)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                backgroundColor: "var(--accent-primary)",
+                color: "#FFFFFF",
+                fontSize: 11,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {(user.name || user.email || "U").charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user.name || "Contributor"}
+              </span>
+              <span style={{ fontSize: 10, color: "var(--text-muted)", display: "block" }}>
+                {user.githubConnected ? `@${user.githubUsername}` : "Local Account"}
+              </span>
+            </div>
           </div>
-          <div className="sidebar-status-row">
-            <dt>AI</dt>
-            <dd>
-              {hasData
-                ? (provider?.status || "Unknown")
-                    .replace(/_/g, " ")
-                    .toLowerCase()
-                : "—"}
-            </dd>
-          </div>
-          <div className="sidebar-status-row">
-            <dt>GitHub rate</dt>
-            <dd>
-              {rate
-                ? `${rate.remaining}${rate.limit != null ? `/${rate.limit}` : ""}`
-                : "—"}
-            </dd>
-          </div>
-        </dl>
+        )}
       </section>
     </aside>
   );

@@ -75,6 +75,7 @@ export function mcpStatus(mcp, connection) {
   const blocked = guard(mcp, connection);
   if (blocked) return blocked;
   switch (mcp.status) {
+    case 'TOOLS_AVAILABLE': return { label: 'Connected', tone: 'success' };
     case 'CONNECTED': return { label: 'Connected', tone: 'success' };
     case 'CONNECTING': return PENDING;
     case 'PENDING_SERVER_CONFIG': return UNCONFIGURED;

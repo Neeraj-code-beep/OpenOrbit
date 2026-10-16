@@ -412,9 +412,60 @@ export async function handleGitHubCallback(req, res) {
       // Redirect to destination
       const successUrl = new URL(oauthPayload.redirectTo || '/', env.CLIENT_ORIGIN);
       successUrl.searchParams.set('auth_success', isNewUser ? 'registered' : 'logged_in');
-      return res.redirect(302, successUrl.toString());
     }
   } catch (err) {
     return failRedirect(err.code || 'AUTH_PROCESSING_FAILED', err.message);
   }
+}
+
+/**
+ * DELETE /api/v1/auth/github
+ * Safely disconnects the linked GitHub account for authenticated user
+ * Prevents account lockout if GitHub is the only login method
+ */
+export async function unlinkGitHub(req, res) {
+  const userId = req.user?.id || req.user?._id;
+  if (!userId) {
+    throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+  }
+
+  const user = await User.findById(userId).select('+password');
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+
+  if (!user.githubId) {
+    throw new AppError('No GitHub account is currently linked', 400, 'NO_GITHUB_LINKED');
+  }
+
+  // Prevent account lockout: user must have a local password to disconnect GitHub
+  if (!user.password) {
+    throw new AppError(
+      'Cannot disconnect GitHub because it is your only sign-in method. You must set an account password first.',
+      400,
+      'CANNOT_DISCONNECT_ONLY_AUTH_METHOD'
+    );
+  }
+
+  user.githubId = undefined;
+  user.githubUsername = undefined;
+  user.githubAvatarUrl = undefined;
+  user.githubProfileUrl = undefined;
+  user.githubAccessTokenEncrypted = undefined;
+  user.githubRefreshTokenEncrypted = undefined;
+  user.githubTokenExpiresAt = undefined;
+  user.githubRefreshTokenExpiresAt = undefined;
+  user.githubScopes = [];
+  user.githubTokenVersion = (user.githubTokenVersion || 0) + 1;
+  user.authProviders = (user.authProviders || []).filter((p) => p !== 'github');
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'GitHub account disconnected successfully',
+    data: {
+      user: user.toSafeObject(),
+    },
+  });
 }

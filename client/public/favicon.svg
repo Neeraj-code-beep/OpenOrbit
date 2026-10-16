@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
-  <title>OpenOrbit</title>
-  <rect width="64" height="64" rx="14" fill="#2563EB"/>
-  <circle cx="32" cy="32" r="15" stroke="#FFFFFF" stroke-width="7"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#244b35"/><stop offset="1" stop-color="#12261d"/></linearGradient><linearGradient id="orbit" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#597d4b"/><stop offset="1" stop-color="#c3dc69"/></linearGradient></defs>
+<rect width="512" height="512" rx="108" fill="url(#bg)"/><circle cx="251" cy="251" r="136" fill="none" stroke="#f8f5e8" stroke-width="49"/>
+<path d="M78 340 Q204 278 398 148" fill="none" stroke="#597d4b" stroke-width="48" stroke-linecap="round"/><path d="M75 351 Q205 289 376 174" fill="none" stroke="url(#orbit)" stroke-width="23" stroke-linecap="round"/><circle cx="397" cy="148" r="23" fill="#c3dc69"/><circle cx="81" cy="342" r="19" fill="#597d4b"/></svg>

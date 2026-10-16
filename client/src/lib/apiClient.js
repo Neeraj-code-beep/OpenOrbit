@@ -11,9 +11,14 @@ export class ApiError extends Error {
   }
 }
 
+const RAW_BASE_URL = (import.meta.env?.VITE_API_BASE_URL || '').trim();
+const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
+
 async function request(endpoint, options = {}) {
-  const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = API_BASE_URL ? `${API_BASE_URL}${normalizedEndpoint}` : normalizedEndpoint;
   const config = {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -41,6 +46,48 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  // Authentication
+  register: (payload) =>
+    request('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  login: (payload) =>
+    request('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  logout: () =>
+    request('/api/v1/auth/logout', {
+      method: 'POST',
+    }),
+
+  getMe: () => request('/api/v1/auth/me'),
+
+  reauthenticate: (payload) =>
+    request('/api/v1/auth/reauth', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getGitHubAuthUrl: () =>
+    API_BASE_URL ? `${API_BASE_URL}/api/v1/auth/github` : '/api/v1/auth/github',
+
+  getGitHubLinkUrl: ({ ticket, redirectTo = '/settings' } = {}) => {
+    const base = API_BASE_URL ? `${API_BASE_URL}/api/v1/auth/github` : '/api/v1/auth/github';
+    const params = new URLSearchParams({ link: 'true' });
+    if (ticket) params.set('ticket', ticket);
+    if (redirectTo) params.set('redirect_to', redirectTo);
+    return `${base}?${params.toString()}`;
+  },
+
+  unlinkGitHub: () =>
+    request('/api/v1/auth/github', {
+      method: 'DELETE',
+    }),
+
   // Health
   getHealth: () => request('/api/health'),
 
@@ -59,6 +106,49 @@ export const api = {
   
   getIssueDetails: (owner, repo, issueNumber) =>
     request(`/api/github/repositories/${owner}/${repo}/issues/${issueNumber}`),
+
+  getPullRequests: (owner, repo, params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/api/github/repositories/${owner}/${repo}/pulls${query ? `?${query}` : ""}`);
+  },
+
+  getCommits: (owner, repo) => request(`/api/github/repositories/${owner}/${repo}/commits`),
+
+  getUserActivity: (username) => request(`/api/github/users/${username}/activity`),
+
+  getUserRepositories: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/api/github/user/repos${query ? `?${query}` : ""}`);
+  },
+
+  // Saved Issues (User-scoped, authenticated)
+  getSavedIssues: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/api/v1/saved-issues${query ? `?${query}` : ""}`);
+  },
+
+  saveIssue: (payload) =>
+    request('/api/v1/saved-issues', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateSavedIssue: (id, payload) =>
+    request(`/api/v1/saved-issues/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteSavedIssue: (id) =>
+    request(`/api/v1/saved-issues/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // Recommendations (Personalized issue suggestions)
+  getRecommendations: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/api/v1/recommendations/issues${query ? `?${query}` : ""}`);
+  },
 
   // AI & Contribution Planning
   getAIStatus: () => request('/api/ai/status'),
